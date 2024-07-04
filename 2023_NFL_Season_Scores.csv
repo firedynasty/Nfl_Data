@@ -1,0 +1,273 @@
+game_date,winning_team,winning_score,losing_team,losing_score,pass_yds_player,pass_yds_value,pass_yds_team,rush_yds_player,rush_yds_value,rush_yds_team,rec_yds_player,rec_yds_value,rec_yds_team,home_team,week
+"Sep 7, 2023",Detroit Lions,21,Kansas City Chiefs,20,Goff,253,DET,Montgomery,74,DET,Reynolds,80,DET,Kansas City Chiefs,1
+"Sep 10, 2023",Atlanta Falcons,24,Carolina Panthers,10,Young,146,CAR,Allgeier,75,ATL,Pitts,44,ATL,Carolina Panthers,1
+"Sep 10, 2023",Cleveland Browns,24,Cincinnati Bengals,3,Watson,154,CLE,Chubb,106,CLE,Moore,43,CLE,Cincinnati Bengals,1
+"Sep 10, 2023",Jacksonville Jaguars,31,Indianapolis Colts,21,Lawrence,241,JAX,Etienne,77,JAX,Ridley,101,JAX,Indianapolis Colts,1
+"Sep 10, 2023",Tampa Bay Buccaneers,20,Minnesota Vikings,17,Cousins,344,MIN,White,39,TAM,Jefferson,150,MIN,Minnesota Vikings,1
+"Sep 10, 2023",New Orleans Saints,16,Tennessee Titans,15,Carr,305,NOR,Henry,63,TEN,Olave,112,NOR,Tennessee Titans,1
+"Sep 10, 2023",San Francisco 49ers,30,Pittsburgh Steelers,7,Pickett,232,PIT,McCaffrey,152,SFO,Aiyuk,129,SFO,Pittsburgh Steelers,1
+"Sep 10, 2023",Baltimore Ravens,25,Houston Texans,9,Stroud,242,HOU,2 tied,38,2 tied,Collins,80,HOU,Houston Texans,1
+"Sep 10, 2023",Washington Commanders,20,Arizona Cardinals,16,Howell,202,WAS,Conner,62,ARI,Samuel,54,WAS,Arizona Cardinals,1
+"Sep 10, 2023",Green Bay Packers,38,Chicago Bears,20,Love,245,GNB,Fields,59,CHI,Jones,86,GNB,Chicago Bears,1
+"Sep 10, 2023",Las Vegas Raiders,17,Denver Broncos,16,Garoppolo,200,LVR,Williams,52,DEN,Meyers,81,LVR,Denver Broncos,1
+"Sep 10, 2023",Philadelphia Eagles,25,New England Patriots,20,Jones,316,NWE,Gainwell,54,PHI,Brown,79,PHI,New England Patriots,1
+"Sep 10, 2023",Miami Dolphins,36,Los Angeles Chargers,34,Tagovailoa,466,MIA,Ekeler,117,LAC,Hill,215,MIA,Los Angeles Chargers,1
+"Sep 10, 2023",Los Angeles Rams,30,Seattle Seahawks,13,Stafford,334,LAR,Walker,64,SEA,2 tied,119,2 tied,Seattle Seahawks,1
+"Sep 10, 2023",Dallas Cowboys,40,New York Giants,0,Prescott,143,DAL,Pollard,70,DAL,Lamb,77,DAL,New York Giants,1
+"Sep 11, 2023",New York Jets,22,Buffalo Bills,16,Allen,236,BUF,Hall,127,NYJ,Diggs,102,BUF,Buffalo Bills,1
+"Sep 14, 2023",Philadelphia Eagles,34,Minnesota Vikings,28,Cousins,364,MIN,Swift,175,PHI,Jefferson,159,MIN,Philadelphia Eagles,2
+"Sep 17, 2023",Atlanta Falcons,25,Green Bay Packers,24,Ridder,237,ATL,Robinson,124,ATL,London,67,ATL,Atlanta Falcons,2
+"Sep 17, 2023",Buffalo Bills,38,Las Vegas Raiders,10,Allen,274,BUF,Cook,123,BUF,Davis,92,BUF,Buffalo Bills,2
+"Sep 17, 2023",Baltimore Ravens,27,Cincinnati Bengals,24,Jackson,237,BAL,Edwards,62,BAL,Higgins,89,CIN,Cincinnati Bengals,2
+"Sep 17, 2023",Seattle Seahawks,37,Detroit Lions,31,Smith,328,SEA,Montgomery,67,DET,St. Brown,102,DET,Detroit Lions,2
+"Sep 17, 2023",Indianapolis Colts,31,Houston Texans,20,Stroud,384,HOU,Moss,88,IND,Collins,146,HOU,Houston Texans,2
+"Sep 17, 2023",Kansas City Chiefs,17,Jacksonville Jaguars,9,Mahomes,305,KAN,Pacheco,70,KAN,Kirk,110,JAX,Jacksonville Jaguars,2
+"Sep 17, 2023",Tennessee Titans,27,Los Angeles Chargers,24,Herbert,305,LAC,Henry,80,TEN,Allen,111,LAC,Tennessee Titans,2
+"Sep 17, 2023",Tampa Bay Buccaneers,27,Chicago Bears,17,Mayfield,317,TAM,White,73,TAM,Evans,171,TAM,Tampa Bay Buccaneers,2
+"Sep 17, 2023",New York Giants,31,Arizona Cardinals,28,Jones,321,NYG,Conner,106,ARI,Hyatt,89,NYG,Arizona Cardinals,2
+"Sep 17, 2023",San Francisco 49ers,30,Los Angeles Rams,23,Stafford,307,LAR,McCaffrey,116,SFO,Nacua,147,LAR,Los Angeles Rams,2
+"Sep 17, 2023",Dallas Cowboys,30,New York Jets,10,Prescott,255,DAL,Pollard,72,DAL,Lamb,143,DAL,Dallas Cowboys,2
+"Sep 17, 2023",Washington Commanders,35,Denver Broncos,33,Wilson,308,DEN,Robinson,87,WAS,Mims,113,DEN,Denver Broncos,2
+"Sep 17, 2023",Miami Dolphins,24,New England Patriots,17,Tagovailoa,249,MIA,Mostert,121,MIA,Waddle,86,MIA,New England Patriots,2
+"Sep 18, 2023",New Orleans Saints,20,Carolina Panthers,17,Carr,228,NOR,Hill,75,NOR,Olave,86,NOR,Carolina Panthers,2
+"Sep 18, 2023",Pittsburgh Steelers,26,Cleveland Browns,22,Watson,235,CLE,Ford,106,CLE,Pickens,127,PIT,Pittsburgh Steelers,2
+"Sep 21, 2023",San Francisco 49ers,30,New York Giants,12,Purdy,310,SFO,McCaffrey,85,SFO,Samuel,129,SFO,San Francisco 49ers,3
+"Sep 24, 2023",Cleveland Browns,27,Tennessee Titans,3,Watson,289,CLE,Strong,27,CLE,Cooper,116,CLE,Cleveland Browns,3
+"Sep 24, 2023",Detroit Lions,20,Atlanta Falcons,6,Goff,243,DET,Gibbs,80,DET,St. Brown,102,DET,Detroit Lions,3
+"Sep 24, 2023",Green Bay Packers,18,New Orleans Saints,17,Love,259,GNB,Love,39,GNB,Olave,104,NOR,Green Bay Packers,3
+"Sep 24, 2023",Houston Texans,37,Jacksonville Jaguars,17,Stroud,280,HOU,Etienne,88,JAX,Dell,145,HOU,Jacksonville Jaguars,3
+"Sep 24, 2023",Miami Dolphins,70,Denver Broncos,20,Tagovailoa,309,MIA,Achane,203,MIA,Hill,157,MIA,Miami Dolphins,3
+"Sep 24, 2023",Los Angeles Chargers,28,Minnesota Vikings,24,Herbert,405,LAC,Mattison,93,MIN,Allen,215,LAC,Minnesota Vikings,3
+"Sep 24, 2023",New England Patriots,15,New York Jets,10,Jones,201,NWE,Elliott,80,NWE,Brown,71,NWE,New York Jets,3
+"Sep 24, 2023",Indianapolis Colts,22,Baltimore Ravens,19,Minshew,227,IND,Moss,122,IND,Pittman,77,IND,Baltimore Ravens,3
+"Sep 24, 2023",Buffalo Bills,37,Washington Commanders,3,Allen,218,BUF,Cook,98,BUF,Diggs,111,BUF,Washington Commanders,3
+"Sep 24, 2023",Seattle Seahawks,37,Carolina Panthers,27,Dalton,361,CAR,Walker,97,SEA,Thielen,145,CAR,Seattle Seahawks,3
+"Sep 24, 2023",Arizona Cardinals,28,Dallas Cowboys,16,Prescott,249,DAL,Pollard,122,DAL,Gallup,92,DAL,Arizona Cardinals,3
+"Sep 24, 2023",Kansas City Chiefs,41,Chicago Bears,10,Mahomes,272,KAN,Pacheco,62,KAN,Kelce,69,KAN,Kansas City Chiefs,3
+"Sep 24, 2023",Pittsburgh Steelers,23,Las Vegas Raiders,18,Garoppolo,324,LVR,Harris,65,PIT,Adams,172,LVR,Las Vegas Raiders,3
+"Sep 25, 2023",Philadelphia Eagles,25,Tampa Bay Buccaneers,11,Hurts,277,PHI,Swift,130,PHI,Brown,131,PHI,Tampa Bay Buccaneers,3
+"Sep 25, 2023",Cincinnati Bengals,19,Los Angeles Rams,16,Stafford,269,LAR,Mixon,65,CIN,Chase,141,CIN,Cincinnati Bengals,3
+"Sep 28, 2023",Detroit Lions,34,Green Bay Packers,20,Love,246,GNB,Montgomery,121,DET,Doubs,95,GNB,Green Bay Packers,4
+"Oct 1, 2023",Jacksonville Jaguars,23,Atlanta Falcons,7,Lawrence,207,JAX,Robinson,105,ATL,Smith,95,ATL,Jacksonville Jaguars,4
+"Oct 1, 2023",Buffalo Bills,48,Miami Dolphins,20,Allen,320,BUF,Achane,101,MIA,Diggs,120,BUF,Buffalo Bills,4
+"Oct 1, 2023",Minnesota Vikings,21,Carolina Panthers,13,Young,204,CAR,Mattison,95,MIN,Jefferson,85,MIN,Carolina Panthers,4
+"Oct 1, 2023",Denver Broncos,31,Chicago Bears,28,Fields,335,CHI,Herbert,103,CHI,Moore,131,CHI,Chicago Bears,4
+"Oct 1, 2023",Baltimore Ravens,28,Cleveland Browns,3,Jackson,186,BAL,Strong,49,CLE,Andrews,80,BAL,Cleveland Browns,4
+"Oct 1, 2023",Los Angeles Rams,29,Indianapolis Colts,23,Stafford,319,LAR,Williams,103,LAR,Nacua,163,LAR,Indianapolis Colts,4
+"Oct 1, 2023",Houston Texans,30,Pittsburgh Steelers,6,Stroud,306,HOU,Pierce,81,HOU,Collins,168,HOU,Houston Texans,4
+"Oct 1, 2023",Tampa Bay Buccaneers,26,New Orleans Saints,9,Mayfield,246,TAM,White,56,TAM,Godwin,114,TAM,New Orleans Saints,4
+"Oct 1, 2023",Tennessee Titans,27,Cincinnati Bengals,3,Tannehill,240,TEN,Henry,122,TEN,Chase,73,CIN,Tennessee Titans,4
+"Oct 1, 2023",Philadelphia Eagles,34,Washington Commanders,31,Hurts,319,PHI,Swift,56,PHI,Brown,175,PHI,Philadelphia Eagles,4
+"Oct 1, 2023",Los Angeles Chargers,24,Las Vegas Raiders,17,O'Connell,238,LVR,Kelley,65,LAC,Jacobs,81,LVR,Los Angeles Chargers,4
+"Oct 1, 2023",Dallas Cowboys,38,New England Patriots,3,Prescott,261,DAL,Pollard,47,DAL,Ferguson,77,DAL,Dallas Cowboys,4
+"Oct 1, 2023",San Francisco 49ers,35,Arizona Cardinals,16,Purdy,283,SFO,McCaffrey,106,SFO,Aiyuk,148,SFO,San Francisco 49ers,4
+"Oct 1, 2023",Kansas City Chiefs,23,New York Jets,20,Wilson,245,NYJ,Pacheco,115,KAN,Lazard,61,NYJ,New York Jets,4
+"Oct 2, 2023",Seattle Seahawks,24,New York Giants,3,Jones,203,NYG,Walker,79,SEA,Fant,63,SEA,New York Giants,4
+"Oct 5, 2023",Chicago Bears,40,Washington Commanders,20,Howell,388,WAS,Herbert,76,CHI,Moore,230,CHI,Washington Commanders,5
+"Oct 8, 2023",Jacksonville Jaguars,25,Buffalo Bills,20,Allen,359,BUF,Etienne,136,JAX,Ridley,122,JAX,Buffalo Bills,5
+"Oct 8, 2023",Atlanta Falcons,21,Houston Texans,19,Ridder,329,ATL,Pierce,66,HOU,Pitts,87,ATL,Atlanta Falcons,5
+"Oct 8, 2023",Indianapolis Colts,23,Tennessee Titans,16,Tannehill,264,TEN,Moss,165,IND,Hopkins,140,TEN,Indianapolis Colts,5
+"Oct 8, 2023",Detroit Lions,42,Carolina Panthers,24,Young,247,CAR,Montgomery,109,DET,Thielen,107,CAR,Detroit Lions,5
+"Oct 8, 2023",Miami Dolphins,31,New York Giants,16,Tagovailoa,308,MIA,Achane,151,MIA,Hill,181,MIA,Miami Dolphins,5
+"Oct 8, 2023",New Orleans Saints,34,New England Patriots,0,Carr,183,NOR,Kamara,80,NOR,Thomas,65,NOR,New England Patriots,5
+"Oct 8, 2023",Pittsburgh Steelers,17,Baltimore Ravens,10,Jackson,236,BAL,Edwards,48,BAL,Pickens,130,PIT,Pittsburgh Steelers,5
+"Oct 8, 2023",Cincinnati Bengals,34,Arizona Cardinals,20,Burrow,317,CIN,Mixon,81,CIN,Chase,192,CIN,Arizona Cardinals,5
+"Oct 8, 2023",Philadelphia Eagles,23,Los Angeles Rams,14,Hurts,303,PHI,Hurts,72,PHI,Brown,127,PHI,Los Angeles Rams,5
+"Oct 8, 2023",New York Jets,31,Denver Broncos,21,Wilson,199,NYJ,Hall,177,NYJ,Perine,73,DEN,Denver Broncos,5
+"Oct 8, 2023",Kansas City Chiefs,27,Minnesota Vikings,20,Cousins,284,MIN,Pacheco,55,KAN,Kelce,67,KAN,Minnesota Vikings,5
+"Oct 8, 2023",San Francisco 49ers,42,Dallas Cowboys,10,Purdy,252,SFO,Mason,69,SFO,Kittle,67,SFO,San Francisco 49ers,5
+"Oct 9, 2023",Las Vegas Raiders,17,Green Bay Packers,13,Garoppolo,208,LVR,Dillon,76,GNB,Watson,91,GNB,Las Vegas Raiders,5
+"Oct 12, 2023",Kansas City Chiefs,19,Denver Broncos,8,Mahomes,306,KAN,Pacheco,62,KAN,Kelce,124,KAN,Kansas City Chiefs,6
+"Oct 15, 2023",Baltimore Ravens,24,Tennessee Titans,16,Jackson,223,BAL,Henry,97,TEN,Andrews,69,BAL,Tennessee Titans,6
+"Oct 15, 2023",Washington Commanders,24,Atlanta Falcons,16,Ridder,307,ATL,Allgeier,51,ATL,London,125,ATL,Atlanta Falcons,6
+"Oct 15, 2023",Minnesota Vikings,19,Chicago Bears,13,Cousins,181,MIN,Foreman,65,CHI,Moore,51,CHI,Chicago Bears,6
+"Oct 15, 2023",Cincinnati Bengals,17,Seattle Seahawks,13,Smith,326,SEA,Walker,62,SEA,Lockett,94,SEA,Cincinnati Bengals,6
+"Oct 15, 2023",Cleveland Browns,19,San Francisco 49ers,17,Walker,192,CLE,Ford,84,CLE,Cooper,108,CLE,Cleveland Browns,6
+"Oct 15, 2023",Houston Texans,20,New Orleans Saints,13,Carr,353,NOR,Kamara,68,NOR,Olave,96,NOR,Houston Texans,6
+"Oct 15, 2023",Jacksonville Jaguars,37,Indianapolis Colts,20,Minshew,329,IND,Etienne,55,JAX,Pittman,109,IND,Jacksonville Jaguars,6
+"Oct 15, 2023",Miami Dolphins,42,Carolina Panthers,21,Tagovailoa,262,MIA,Mostert,115,MIA,Hill,163,MIA,Miami Dolphins,6
+"Oct 15, 2023",Las Vegas Raiders,21,New England Patriots,17,Jones,200,NWE,Jacobs,77,LVR,Bourne,89,NWE,Las Vegas Raiders,6
+"Oct 15, 2023",New York Jets,20,Philadelphia Eagles,14,Hurts,280,PHI,Hurts,47,PHI,Brown,131,PHI,New York Jets,6
+"Oct 15, 2023",Los Angeles Rams,26,Arizona Cardinals,9,Dobbs,235,ARI,Williams,158,LAR,Kupp,148,LAR,Los Angeles Rams,6
+"Oct 15, 2023",Detroit Lions,20,Tampa Bay Buccaneers,6,Goff,353,DET,White,26,TAM,St. Brown,124,DET,Tampa Bay Buccaneers,6
+"Oct 15, 2023",Buffalo Bills,14,New York Giants,9,Taylor,200,NYG,Barkley,93,NYG,Diggs,100,BUF,Buffalo Bills,6
+"Oct 16, 2023",Dallas Cowboys,20,Los Angeles Chargers,17,Prescott,272,DAL,Prescott,40,DAL,Lamb,117,DAL,Los Angeles Chargers,6
+"Oct 19, 2023",Jacksonville Jaguars,31,New Orleans Saints,24,Carr,301,NOR,Kamara,62,NOR,Kamara,91,NOR,New Orleans Saints,7
+"Oct 22, 2023",Chicago Bears,30,Las Vegas Raiders,12,Bagent,162,CHI,Foreman,89,CHI,Adams,57,LVR,Chicago Bears,7
+"Oct 22, 2023",Cleveland Browns,39,Indianapolis Colts,38,Minshew,305,IND,Taylor,75,IND,Downs,125,IND,Indianapolis Colts,7
+"Oct 22, 2023",New England Patriots,29,Buffalo Bills,25,Jones,272,NWE,Cook,56,BUF,Kincaid,75,BUF,New England Patriots,7
+"Oct 22, 2023",New York Giants,14,Washington Commanders,7,Taylor,279,NYG,Barkley,77,NYG,Waller,98,NYG,New York Giants,7
+"Oct 22, 2023",Baltimore Ravens,38,Detroit Lions,6,Jackson,357,BAL,Gibbs,68,DET,St. Brown,102,DET,Baltimore Ravens,7
+"Oct 22, 2023",Atlanta Falcons,16,Tampa Bay Buccaneers,13,Mayfield,275,TAM,Allgeier,59,ATL,Evans,82,TAM,Tampa Bay Buccaneers,7
+"Oct 22, 2023",Pittsburgh Steelers,24,Los Angeles Rams,17,Stafford,231,LAR,Freeman,66,LAR,Nacua,154,LAR,Los Angeles Rams,7
+"Oct 22, 2023",Seattle Seahawks,20,Arizona Cardinals,10,Smith,219,SEA,Walker,105,SEA,Smith,63,Njigba,Seattle Seahawks,7
+"Oct 22, 2023",Denver Broncos,19,Green Bay Packers,17,Wilson,194,DEN,Williams,82,DEN,Sutton,76,DEN,Denver Broncos,7
+"Oct 22, 2023",Kansas City Chiefs,31,Los Angeles Chargers,17,Mahomes,424,KAN,Kelley,75,LAC,Kelce,179,KAN,Kansas City Chiefs,7
+"Oct 22, 2023",Philadelphia Eagles,31,Miami Dolphins,17,Hurts,279,PHI,Swift,62,PHI,Brown,137,PHI,Philadelphia Eagles,7
+"Oct 23, 2023",Minnesota Vikings,22,San Francisco 49ers,17,Cousins,378,MIN,McCaffrey,45,SFO,Addison,123,MIN,Minnesota Vikings,7
+"Oct 26, 2023",Buffalo Bills,24,Tampa Bay Buccaneers,18,Allen,324,BUF,Cook,67,BUF,Shakir,92,BUF,Buffalo Bills,8
+"Oct 29, 2023",Carolina Panthers,15,Houston Texans,13,Young,235,CAR,Pierce,46,HOU,Thielen,72,CAR,Carolina Panthers,8
+"Oct 29, 2023",New Orleans Saints,38,Indianapolis Colts,27,Carr,310,NOR,Taylor,95,IND,Shaheed,153,NOR,Indianapolis Colts,8
+"Oct 29, 2023",Dallas Cowboys,43,Los Angeles Rams,20,Prescott,304,DAL,Pollard,53,DAL,Lamb,158,DAL,Dallas Cowboys,8
+"Oct 29, 2023",Minnesota Vikings,24,Green Bay Packers,10,Cousins,274,MIN,Love,34,GNB,Osborn,99,MIN,Green Bay Packers,8
+"Oct 29, 2023",Miami Dolphins,31,New England Patriots,17,Tagovailoa,324,MIA,Mostert,46,MIA,Waddle,121,MIA,Miami Dolphins,8
+"Oct 29, 2023",New York Jets,13,New York Giants,10,Wilson,240,NYJ,Barkley,128,NYG,Wilson,100,NYJ,New York Giants,8
+"Oct 29, 2023",Tennessee Titans,28,Atlanta Falcons,23,Levis,238,TEN,Henry,101,TEN,Hopkins,128,TEN,Tennessee Titans,8
+"Oct 29, 2023",Jacksonville Jaguars,20,Pittsburgh Steelers,10,Lawrence,292,JAX,Etienne,79,JAX,Engram,88,JAX,Pittsburgh Steelers,8
+"Oct 29, 2023",Philadelphia Eagles,38,Washington Commanders,31,Howell,397,WAS,Robinson,59,WAS,Brown,130,PHI,Washington Commanders,8
+"Oct 29, 2023",Seattle Seahawks,24,Cleveland Browns,20,Smith,254,SEA,Walker,66,SEA,Cooper,89,CLE,Seattle Seahawks,8
+"Oct 29, 2023",Baltimore Ravens,31,Arizona Cardinals,24,Dobbs,208,ARI,Edwards,80,BAL,McBride,95,ARI,Arizona Cardinals,8
+"Oct 29, 2023",Denver Broncos,24,Kansas City Chiefs,9,Mahomes,240,KAN,Williams,85,DEN,Kelce,58,KAN,Denver Broncos,8
+"Oct 29, 2023",Cincinnati Bengals,31,San Francisco 49ers,17,Purdy,365,SFO,Mixon,87,CIN,Kittle,149,SFO,San Francisco 49ers,8
+"Oct 29, 2023",Los Angeles Chargers,30,Chicago Bears,13,Herbert,298,LAC,Foreman,34,CHI,Ekeler,94,LAC,Los Angeles Chargers,8
+"Oct 30, 2023",Detroit Lions,26,Las Vegas Raiders,14,Goff,272,DET,Gibbs,152,DET,St. Brown,108,DET,Detroit Lions,8
+"Nov 2, 2023",Pittsburgh Steelers,20,Tennessee Titans,16,Levis,262,TEN,Warren,88,PIT,Johnson,90,PIT,Pittsburgh Steelers,9
+"Nov 5, 2023",Kansas City Chiefs,21,Miami Dolphins,14,Tagovailoa,193,MIA,Mostert,85,MIA,Hill,62,MIA,Kansas City Chiefs,9
+"Nov 5, 2023",Minnesota Vikings,31,Atlanta Falcons,28,Heinicke,268,ATL,Dobbs,66,MIN,Smith,100,ATL,Atlanta Falcons,9
+"Nov 5, 2023",Cleveland Browns,27,Arizona Cardinals,0,Watson,219,CLE,Ford,44,CLE,Cooper,139,CLE,Cleveland Browns,9
+"Nov 5, 2023",Green Bay Packers,20,Los Angeles Rams,3,Love,228,GNB,Jones,73,GNB,Musgrave,51,GNB,Green Bay Packers,9
+"Nov 5, 2023",Houston Texans,39,Tampa Bay Buccaneers,37,Stroud,470,HOU,White,73,TAM,Brown,153,HOU,Houston Texans,9
+"Nov 5, 2023",New Orleans Saints,24,Chicago Bears,17,Bagent,220,CHI,Foreman,83,CHI,Mooney,82,CHI,New Orleans Saints,9
+"Nov 5, 2023",Washington Commanders,20,New England Patriots,17,Howell,325,WAS,Stevenson,87,NWE,McLaurin,73,WAS,New England Patriots,9
+"Nov 5, 2023",Baltimore Ravens,37,Seattle Seahawks,3,Jackson,187,BAL,Mitchell,138,BAL,Andrews,80,BAL,Baltimore Ravens,9
+"Nov 5, 2023",Indianapolis Colts,27,Carolina Panthers,13,Young,173,CAR,Hubbard,58,CAR,Pittman,64,IND,Carolina Panthers,9
+"Nov 5, 2023",Philadelphia Eagles,28,Dallas Cowboys,23,Prescott,374,DAL,Pollard,51,DAL,Lamb,191,DAL,Philadelphia Eagles,9
+"Nov 5, 2023",Las Vegas Raiders,30,New York Giants,6,O'Connell,209,LVR,Jacobs,98,LVR,Slayton,59,NYG,Las Vegas Raiders,9
+"Nov 5, 2023",Cincinnati Bengals,24,Buffalo Bills,18,Burrow,348,CIN,Allen,44,BUF,Higgins,110,CIN,Cincinnati Bengals,9
+"Nov 6, 2023",Los Angeles Chargers,27,New York Jets,6,Wilson,263,NYJ,Hall,50,NYJ,Wilson,80,NYJ,New York Jets,9
+"Nov 9, 2023",Chicago Bears,16,Carolina Panthers,13,Young,185,CAR,Foreman,80,CHI,Moore,58,CHI,Chicago Bears,10
+"Nov 12, 2023",Indianapolis Colts,10,New England Patriots,6,Minshew,194,IND,Stevenson,88,NWE,2 tied,84,,New England Patriots,10
+"Nov 12, 2023",Houston Texans,30,Cincinnati Bengals,27,Stroud,356,HOU,Singletary,150,HOU,Brown,172,HOU,Cincinnati Bengals,10
+"Nov 12, 2023",San Francisco 49ers,34,Jacksonville Jaguars,3,Purdy,296,SFO,McCaffrey,95,SFO,Kittle,116,SFO,Jacksonville Jaguars,10
+"Nov 12, 2023",Minnesota Vikings,27,New Orleans Saints,19,Dobbs,268,MIN,Chandler,45,MIN,Hockenson,134,MIN,Minnesota Vikings,10
+"Nov 12, 2023",Pittsburgh Steelers,23,Green Bay Packers,19,Love,289,GNB,Warren,101,PIT,Reed,84,GNB,Pittsburgh Steelers,10
+"Nov 12, 2023",Cleveland Browns,33,Baltimore Ravens,31,Jackson,223,BAL,Ford,107,CLE,Cooper,98,CLE,Baltimore Ravens,10
+"Nov 12, 2023",Tampa Bay Buccaneers,20,Tennessee Titans,6,Mayfield,278,TAM,White,51,TAM,Evans,143,TAM,Tampa Bay Buccaneers,10
+"Nov 12, 2023",Arizona Cardinals,25,Atlanta Falcons,23,Murray,249,ARI,Robinson,95,ATL,McBride,131,ARI,Arizona Cardinals,10
+"Nov 12, 2023",Detroit Lions,41,Los Angeles Chargers,38,Goff,333,DET,Montgomery,116,DET,Allen,175,LAC,Los Angeles Chargers,10
+"Nov 12, 2023",Dallas Cowboys,49,New York Giants,17,Prescott,404,DAL,Dowdle,79,DAL,Cooks,173,DAL,Dallas Cowboys,10
+"Nov 12, 2023",Seattle Seahawks,29,Washington Commanders,26,Smith,369,SEA,Walker,63,SEA,Robinson,119,WAS,Seattle Seahawks,10
+"Nov 12, 2023",Las Vegas Raiders,16,New York Jets,12,Wilson,263,NYJ,Jacobs,116,LVR,Wilson,93,NYJ,Las Vegas Raiders,10
+"Nov 13, 2023",Denver Broncos,24,Buffalo Bills,22,Wilson,193,DEN,Cook,109,BUF,Davis,56,BUF,Buffalo Bills,10
+"Nov 16, 2023",Baltimore Ravens,34,Cincinnati Bengals,20,Jackson,264,BAL,Mixon,69,CIN,Beckham,116,BAL,Baltimore Ravens,11
+"Nov 19, 2023",Dallas Cowboys,33,Carolina Panthers,10,Prescott,189,DAL,Pollard,61,DAL,Thielen,74,CAR,Carolina Panthers,11
+"Nov 19, 2023",Cleveland Browns,13,Pittsburgh Steelers,10,Thompson,165,Robinson,Warren,129,PIT,Moore,60,CLE,Cleveland Browns,11
+"Nov 19, 2023",Detroit Lions,31,Chicago Bears,26,Goff,236,DET,Fields,104,CHI,Moore,96,CHI,Detroit Lions,11
+"Nov 19, 2023",Green Bay Packers,23,Los Angeles Chargers,20,Love,322,GNB,Herbert,73,LAC,Allen,116,LAC,Green Bay Packers,11
+"Nov 19, 2023",Houston Texans,21,Arizona Cardinals,16,Stroud,336,HOU,Singletary,112,HOU,Dell,149,HOU,Houston Texans,11
+"Nov 19, 2023",Jacksonville Jaguars,34,Tennessee Titans,14,Lawrence,262,JAX,Etienne,52,JAX,Ridley,103,JAX,Jacksonville Jaguars,11
+"Nov 19, 2023",Miami Dolphins,20,Las Vegas Raiders,13,Tagovailoa,325,MIA,Mostert,86,MIA,Hill,146,MIA,Miami Dolphins,11
+"Nov 19, 2023",New York Giants,31,Washington Commanders,19,Howell,256,WAS,Barkley,83,NYG,Slayton,82,NYG,Washington Commanders,11
+"Nov 19, 2023",San Francisco 49ers,27,Tampa Bay Buccaneers,14,Purdy,333,SFO,McCaffrey,78,SFO,Aiyuk,156,SFO,San Francisco 49ers,11
+"Nov 19, 2023",Buffalo Bills,32,New York Jets,6,Allen,275,BUF,Cook,73,BUF,Shakir,115,BUF,Buffalo Bills,11
+"Nov 19, 2023",Los Angeles Rams,17,Seattle Seahawks,16,Smith,233,SEA,Freeman,73,LAR,Metcalf,94,SEA,Los Angeles Rams,11
+"Nov 19, 2023",Denver Broncos,21,Minnesota Vikings,20,Wilson,259,DEN,Mattison,81,MIN,Sutton,66,DEN,Denver Broncos,11
+"Nov 20, 2023",Philadelphia Eagles,21,Kansas City Chiefs,17,Mahomes,177,KAN,Pacheco,89,KAN,Smith,99,PHI,Kansas City Chiefs,11
+"Nov 23, 2023",Green Bay Packers,29,Detroit Lions,22,Goff,332,DET,Montgomery,71,DET,St. Brown,95,DET,Detroit Lions,12
+"Nov 23, 2023",Dallas Cowboys,45,Washington Commanders,10,Prescott,331,DAL,Pollard,79,DAL,Samuel,100,WAS,Dallas Cowboys,12
+"Nov 23, 2023",San Francisco 49ers,31,Seattle Seahawks,13,Purdy,209,SFO,McCaffrey,114,SFO,Samuel,79,SFO,Seattle Seahawks,12
+"Nov 24, 2023",Miami Dolphins,34,New York Jets,13,Tagovailoa,243,MIA,Mostert,94,MIA,Waddle,114,MIA,New York Jets,12
+"Nov 26, 2023",Atlanta Falcons,24,New Orleans Saints,15,Carr,304,NOR,Robinson,91,ATL,Olave,114,NOR,Atlanta Falcons,12
+"Nov 26, 2023",Pittsburgh Steelers,16,Cincinnati Bengals,10,Pickett,278,PIT,Harris,99,PIT,Freiermuth,120,PIT,Cincinnati Bengals,12
+"Nov 26, 2023",Indianapolis Colts,27,Tampa Bay Buccaneers,20,Minshew,251,IND,White,100,TAM,Pittman,107,IND,Indianapolis Colts,12
+"Nov 26, 2023",Jacksonville Jaguars,24,Houston Texans,21,Lawrence,364,JAX,Etienne,56,JAX,Collins,104,HOU,Houston Texans,12
+"Nov 26, 2023",New York Giants,10,New England Patriots,7,DeVito,191,NYG,Stevenson,98,NWE,Hyatt,109,NYG,New York Giants,12
+"Nov 26, 2023",Tennessee Titans,17,Carolina Panthers,10,Young,194,CAR,Henry,76,TEN,Mingo,60,CAR,Tennessee Titans,12
+"Nov 26, 2023",Los Angeles Rams,37,Arizona Cardinals,14,Murray,256,ARI,Williams,143,LAR,Brown,88,ARI,Arizona Cardinals,12
+"Nov 26, 2023",Denver Broncos,29,Cleveland Browns,12,2 tied,134,,2 tied,65,,Sutton,61,DEN,Denver Broncos,12
+"Nov 26, 2023",Philadelphia Eagles,37,Buffalo Bills,34,Allen,339,BUF,Allen,81,BUF,Smith,106,PHI,Philadelphia Eagles,12
+"Nov 26, 2023",Kansas City Chiefs,31,Las Vegas Raiders,17,Mahomes,298,KAN,Jacobs,110,LVR,Rice,107,KAN,Las Vegas Raiders,12
+"Nov 26, 2023",Baltimore Ravens,20,Los Angeles Chargers,10,Herbert,217,LAC,Mitchell,64,BAL,Allen,106,LAC,Los Angeles Chargers,12
+"Nov 27, 2023",Chicago Bears,12,Minnesota Vikings,10,Fields,217,CHI,Fields,59,CHI,Moore,114,CHI,Minnesota Vikings,12
+"Nov 30, 2023",Dallas Cowboys,41,Seattle Seahawks,35,Smith,334,SEA,Pollard,68,DAL,Metcalf,134,SEA,Dallas Cowboys,13
+"Dec 3, 2023",Houston Texans,22,Denver Broncos,17,Stroud,274,HOU,Williams,46,DEN,Collins,191,HOU,Houston Texans,13
+"Dec 3, 2023",Detroit Lions,33,New Orleans Saints,28,Carr,226,NOR,Gibbs,60,DET,LaPorta,140,DET,New Orleans Saints,13
+"Dec 3, 2023",Los Angeles Chargers,6,New England Patriots,0,Herbert,212,LAC,Elliott,52,NWE,Parker,64,NWE,New England Patriots,13
+"Dec 3, 2023",Atlanta Falcons,13,New York Jets,8,Boyle,148,NYJ,Robinson,53,ATL,Gipson,77,NYJ,New York Jets,13
+"Dec 3, 2023",Indianapolis Colts,31,Tennessee Titans,28,Minshew,312,IND,Henry,102,TEN,Pittman,105,IND,Tennessee Titans,13
+"Dec 3, 2023",Arizona Cardinals,24,Pittsburgh Steelers,10,Murray,145,ARI,Conner,105,ARI,McBride,89,ARI,Pittsburgh Steelers,13
+"Dec 3, 2023",Miami Dolphins,45,Washington Commanders,15,Tagovailoa,280,MIA,Achane,73,MIA,Hill,157,MIA,Washington Commanders,13
+"Dec 3, 2023",Tampa Bay Buccaneers,21,Carolina Panthers,18,Mayfield,202,TAM,Hubbard,104,CAR,Evans,162,TAM,Tampa Bay Buccaneers,13
+"Dec 3, 2023",San Francisco 49ers,42,Philadelphia Eagles,19,Purdy,314,SFO,McCaffrey,93,SFO,Samuel,116,SFO,Philadelphia Eagles,13
+"Dec 3, 2023",Los Angeles Rams,36,Cleveland Browns,19,Stafford,279,LAR,Williams,88,LAR,Nacua,105,LAR,Los Angeles Rams,13
+"Dec 3, 2023",Green Bay Packers,27,Kansas City Chiefs,19,Love,267,GNB,Pacheco,110,KAN,Kelce,81,KAN,Green Bay Packers,13
+"Dec 4, 2023",Cincinnati Bengals,34,Jacksonville Jaguars,31,Browning,354,CIN,Mixon,68,CIN,Chase,149,CIN,Jacksonville Jaguars,13
+"Dec 7, 2023",New England Patriots,21,Pittsburgh Steelers,18,Zappe,240,NWE,Elliott,68,NWE,Smith,90,Schuster,Pittsburgh Steelers,14
+"Dec 10, 2023",Tampa Bay Buccaneers,29,Atlanta Falcons,25,Ridder,347,ATL,White,102,TAM,London,172,ATL,Atlanta Falcons,14
+"Dec 10, 2023",Chicago Bears,28,Detroit Lions,13,Fields,223,CHI,2 tied,66,,Moore,68,CHI,Chicago Bears,14
+"Dec 10, 2023",Cincinnati Bengals,34,Indianapolis Colts,14,Browning,275,CIN,Mixon,79,CIN,Pittman,95,IND,Cincinnati Bengals,14
+"Dec 10, 2023",Cleveland Browns,31,Jacksonville Jaguars,27,Flacco,311,CLE,Ford,51,CLE,Engram,95,JAX,Cleveland Browns,14
+"Dec 10, 2023",New Orleans Saints,28,Carolina Panthers,6,Young,137,CAR,Hubbard,87,CAR,Thielen,74,CAR,New Orleans Saints,14
+"Dec 10, 2023",New York Jets,30,Houston Texans,6,Wilson,301,NYJ,Singletary,65,HOU,Wilson,108,NYJ,New York Jets,14
+"Dec 10, 2023",Baltimore Ravens,37,Los Angeles Rams,31,Jackson,316,BAL,Williams,114,LAR,Kupp,115,LAR,Baltimore Ravens,14
+"Dec 10, 2023",Minnesota Vikings,3,Las Vegas Raiders,0,O'Connell,171,LVR,Mattison,66,MIN,2 tied,53,,Las Vegas Raiders,14
+"Dec 10, 2023",San Francisco 49ers,28,Seattle Seahawks,16,Purdy,368,SFO,McCaffrey,145,SFO,Samuel,149,SFO,San Francisco 49ers,14
+"Dec 10, 2023",Buffalo Bills,20,Kansas City Chiefs,17,Mahomes,271,KAN,Cook,58,BUF,2 tied,83,,Kansas City Chiefs,14
+"Dec 10, 2023",Denver Broncos,24,Los Angeles Chargers,7,Wilson,224,DEN,Williams,66,DEN,Johnston,91,LAC,Los Angeles Chargers,14
+"Dec 10, 2023",Dallas Cowboys,33,Philadelphia Eagles,13,Prescott,271,DAL,Pollard,59,DAL,Brown,94,PHI,Dallas Cowboys,14
+"Dec 11, 2023",Tennessee Titans,28,Miami Dolphins,27,Levis,327,TEN,Mostert,96,MIA,Hopkins,124,TEN,Miami Dolphins,14
+"Dec 11, 2023",New York Giants,24,Green Bay Packers,22,Love,218,GNB,Barkley,86,NYG,Robinson,79,NYG,New York Giants,14
+"Dec 14, 2023",Las Vegas Raiders,63,Los Angeles Chargers,21,Stick,257,LAC,White,69,LVR,Palmer,113,LAC,Las Vegas Raiders,15
+"Dec 16, 2023",Cincinnati Bengals,27,Minnesota Vikings,24,Browning,324,CIN,Chandler,132,MIN,Addison,111,MIN,Cincinnati Bengals,15
+"Dec 16, 2023",Indianapolis Colts,30,Pittsburgh Steelers,13,Minshew,215,IND,Sermon,88,IND,Pittman,78,IND,Indianapolis Colts,15
+"Dec 16, 2023",Detroit Lions,42,Denver Broncos,17,Goff,278,DET,Gibbs,100,DET,St. Brown,112,DET,Detroit Lions,15
+"Dec 17, 2023",Carolina Panthers,9,Atlanta Falcons,7,Young,167,CAR,Hubbard,87,CAR,Smith,61,ATL,Carolina Panthers,15
+"Dec 17, 2023",Cleveland Browns,20,Chicago Bears,17,Flacco,374,CLE,Johnson,36,CHI,Cooper,109,CLE,Cleveland Browns,15
+"Dec 17, 2023",Tampa Bay Buccaneers,34,Green Bay Packers,20,Mayfield,381,TAM,White,89,TAM,Godwin,155,TAM,Green Bay Packers,15
+"Dec 17, 2023",Miami Dolphins,30,New York Jets,0,Tagovailoa,224,MIA,Mostert,42,MIA,Waddle,142,MIA,Miami Dolphins,15
+"Dec 17, 2023",New Orleans Saints,24,New York Giants,6,Carr,218,NOR,Kamara,66,NOR,Slayton,63,NYG,New Orleans Saints,15
+"Dec 17, 2023",Kansas City Chiefs,27,New England Patriots,17,Mahomes,305,KAN,Edwards,37,Helaire,Rice,91,KAN,New England Patriots,15
+"Dec 17, 2023",Houston Texans,19,Tennessee Titans,16,Keenum,229,HOU,Singletary,121,HOU,Brown,82,HOU,Tennessee Titans,15
+"Dec 17, 2023",San Francisco 49ers,45,Arizona Cardinals,29,Purdy,242,SFO,McCaffrey,115,SFO,McBride,102,ARI,Arizona Cardinals,15
+"Dec 17, 2023",Los Angeles Rams,28,Washington Commanders,20,Stafford,258,LAR,Williams,152,LAR,McLaurin,141,WAS,Los Angeles Rams,15
+"Dec 17, 2023",Buffalo Bills,31,Dallas Cowboys,10,Prescott,134,DAL,Cook,179,BUF,Lamb,53,DAL,Buffalo Bills,15
+"Dec 17, 2023",Baltimore Ravens,23,Jacksonville Jaguars,7,Lawrence,264,JAX,Jackson,97,BAL,2 tied,70,,Jacksonville Jaguars,15
+"Dec 18, 2023",Seattle Seahawks,20,Philadelphia Eagles,17,Lock,208,SEA,Walker,86,SEA,Metcalf,78,SEA,Seattle Seahawks,15
+"Dec 21, 2023",Los Angeles Rams,30,New Orleans Saints,22,Stafford,328,LAR,Williams,104,LAR,Nacua,164,LAR,Los Angeles Rams,16
+"Dec 23, 2023",Pittsburgh Steelers,34,Cincinnati Bengals,11,Browning,335,CIN,Harris,78,PIT,Pickens,195,PIT,Pittsburgh Steelers,16
+"Dec 23, 2023",Buffalo Bills,24,Los Angeles Chargers,22,Allen,237,BUF,Cook,70,BUF,Davis,130,BUF,Los Angeles Chargers,16
+"Dec 24, 2023",Atlanta Falcons,29,Indianapolis Colts,10,Heinicke,229,ATL,Robinson,72,ATL,Granson,62,IND,Atlanta Falcons,16
+"Dec 24, 2023",Green Bay Packers,33,Carolina Panthers,30,Young,312,CAR,Jones,127,GNB,Chark,98,CAR,Carolina Panthers,16
+"Dec 24, 2023",Cleveland Browns,36,Houston Texans,22,Flacco,368,CLE,Singletary,44,HOU,Cooper,265,CLE,Houston Texans,16
+"Dec 24, 2023",Detroit Lions,30,Minnesota Vikings,24,Mullens,411,MIN,Gibbs,80,DET,Jefferson,141,MIN,Minnesota Vikings,16
+"Dec 24, 2023",New York Jets,30,Washington Commanders,28,Siemian,217,NYJ,Hall,95,NYJ,Hall,96,NYJ,New York Jets,16
+"Dec 24, 2023",Seattle Seahawks,20,Tennessee Titans,17,Smith,227,SEA,Henry,88,TEN,Lockett,81,SEA,Tennessee Titans,16
+"Dec 24, 2023",Tampa Bay Buccaneers,30,Jacksonville Jaguars,12,Mayfield,283,TAM,White,39,TAM,Engram,95,JAX,Tampa Bay Buccaneers,16
+"Dec 24, 2023",Chicago Bears,27,Arizona Cardinals,16,Murray,230,ARI,Herbert,112,CHI,Kmet,107,CHI,Chicago Bears,16
+"Dec 24, 2023",Miami Dolphins,22,Dallas Cowboys,20,Tagovailoa,293,MIA,Mostert,46,MIA,Lamb,118,DAL,Miami Dolphins,16
+"Dec 24, 2023",New England Patriots,26,Denver Broncos,23,Zappe,256,NWE,McLaughlin,37,DEN,Douglas,74,NWE,Denver Broncos,16
+"Dec 25, 2023",Las Vegas Raiders,20,Kansas City Chiefs,14,Mahomes,235,KAN,White,145,LVR,Rice,57,KAN,Kansas City Chiefs,16
+"Dec 25, 2023",Philadelphia Eagles,33,New York Giants,25,Hurts,301,PHI,Swift,92,PHI,Slayton,90,NYG,Philadelphia Eagles,16
+"Dec 25, 2023",Baltimore Ravens,33,San Francisco 49ers,19,Purdy,255,SFO,McCaffrey,103,SFO,Kittle,126,SFO,San Francisco 49ers,16
+"Dec 28, 2023",Cleveland Browns,37,New York Jets,20,Flacco,309,CLE,Hall,84,NYJ,Njoku,134,CLE,Cleveland Browns,17
+"Dec 30, 2023",Dallas Cowboys,20,Detroit Lions,19,Prescott,345,DAL,Montgomery,65,DET,Lamb,227,DAL,Dallas Cowboys,17
+"Dec 31, 2023",Buffalo Bills,27,New England Patriots,21,Zappe,209,NWE,Cook,48,BUF,Kincaid,87,BUF,Buffalo Bills,17
+"Dec 31, 2023",Chicago Bears,37,Atlanta Falcons,17,Fields,268,CHI,Herbert,124,CHI,Moore,159,CHI,Chicago Bears,17
+"Dec 31, 2023",Indianapolis Colts,23,Las Vegas Raiders,20,O'Connell,299,LVR,Taylor,96,IND,Adams,126,LVR,Indianapolis Colts,17
+"Dec 31, 2023",Houston Texans,26,Tennessee Titans,3,Stroud,213,HOU,Singletary,80,HOU,Collins,80,HOU,Houston Texans,17
+"Dec 31, 2023",Jacksonville Jaguars,26,Carolina Panthers,0,Beathard,178,JAX,Etienne,102,JAX,Engram,60,JAX,Jacksonville Jaguars,17
+"Dec 31, 2023",Los Angeles Rams,26,New York Giants,25,Taylor,319,NYG,Williams,87,LAR,Nacua,118,LAR,New York Giants,17
+"Dec 31, 2023",Arizona Cardinals,35,Philadelphia Eagles,31,Murray,232,ARI,Conner,128,ARI,Dortch,82,ARI,Philadelphia Eagles,17
+"Dec 31, 2023",Baltimore Ravens,56,Miami Dolphins,19,Jackson,321,BAL,Achane,107,MIA,Flowers,106,BAL,Baltimore Ravens,17
+"Dec 31, 2023",New Orleans Saints,23,Tampa Bay Buccaneers,13,Mayfield,309,TAM,Williams,58,NOR,Johnson,90,NOR,Tampa Bay Buccaneers,17
+"Dec 31, 2023",San Francisco 49ers,27,Washington Commanders,10,Purdy,230,SFO,Mitchell,80,SFO,Aiyuk,114,SFO,Washington Commanders,17
+"Dec 31, 2023",Pittsburgh Steelers,30,Seattle Seahawks,23,Smith,290,SEA,Harris,122,PIT,Pickens,131,PIT,Seattle Seahawks,17
+"Dec 31, 2023",Denver Broncos,16,Los Angeles Chargers,9,Stidham,224,DEN,Ekeler,46,LAC,Erickson,98,LAC,Denver Broncos,17
+"Dec 31, 2023",Kansas City Chiefs,25,Cincinnati Bengals,17,Mahomes,245,KAN,Pacheco,130,KAN,Rice,127,KAN,Kansas City Chiefs,17
+"Dec 31, 2023",Green Bay Packers,33,Minnesota Vikings,10,Love,256,GNB,Jones,120,GNB,Melton,105,GNB,Minnesota Vikings,17
+"Jan 6, 2024",Pittsburgh Steelers,17,Baltimore Ravens,10,Rudolph,152,PIT,Harris,112,PIT,Johnson,89,PIT,Baltimore Ravens,18
+"Jan 6, 2024",Houston Texans,23,Indianapolis Colts,19,Stroud,264,HOU,Taylor,188,IND,Collins,195,HOU,Indianapolis Colts,18
+"Jan 7, 2024",Tampa Bay Buccaneers,9,Carolina Panthers,0,Mayfield,137,TAM,Hubbard,83,CAR,Godwin,51,TAM,Carolina Panthers,18
+"Jan 7, 2024",Cincinnati Bengals,31,Cleveland Browns,14,Driskel,166,CLE,Mixon,111,CIN,Bell,68,CLE,Cincinnati Bengals,18
+"Jan 7, 2024",Detroit Lions,30,Minnesota Vikings,20,Mullens,396,MIN,Chandler,69,MIN,Jefferson,192,MIN,Detroit Lions,18
+"Jan 7, 2024",New Orleans Saints,48,Atlanta Falcons,17,Ridder,291,ATL,Miller,73,NOR,Robinson,103,ATL,New Orleans Saints,18
+"Jan 7, 2024",New York Jets,17,New England Patriots,3,Zappe,88,NWE,Hall,178,NYJ,Wilson,34,NYJ,New England Patriots,18
+"Jan 7, 2024",Tennessee Titans,28,Jacksonville Jaguars,20,Lawrence,280,JAX,Henry,153,TEN,Ridley,106,JAX,Tennessee Titans,18
+"Jan 7, 2024",Seattle Seahawks,21,Arizona Cardinals,20,Murray,262,ARI,Conner,150,ARI,Wilson,95,ARI,Arizona Cardinals,18
+"Jan 7, 2024",Green Bay Packers,17,Chicago Bears,9,Love,316,GNB,Jones,111,GNB,Reed,112,GNB,Green Bay Packers,18
+"Jan 7, 2024",New York Giants,27,Philadelphia Eagles,10,Taylor,297,NYG,Gainwell,62,PHI,Watkins,93,PHI,New York Giants,18
+"Jan 7, 2024",Las Vegas Raiders,27,Denver Broncos,14,Stidham,272,DEN,White,112,LVR,Johnson,88,DEN,Las Vegas Raiders,18
+"Jan 7, 2024",Kansas City Chiefs,13,Los Angeles Chargers,12,Stick,258,LAC,Stick,77,LAC,Parham,83,LAC,Los Angeles Chargers,18
+"Jan 7, 2024",Los Angeles Rams,21,San Francisco 49ers,20,Darnold,189,SFO,Wentz,56,LAR,Conley,69,SFO,San Francisco 49ers,18
+"Jan 7, 2024",Dallas Cowboys,38,Washington Commanders,10,Prescott,279,DAL,Pollard,70,DAL,Lamb,98,DAL,Washington Commanders,18
+"Jan 7, 2024",Buffalo Bills,21,Miami Dolphins,14,Allen,359,BUF,Allen,67,BUF,Shakir,105,BUF,Miami Dolphins,18
