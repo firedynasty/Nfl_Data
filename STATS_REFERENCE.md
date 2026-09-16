@@ -355,6 +355,34 @@ print(hits_sacks)
 
 
 
+### Game Performance Score (composite)
+- **Script:** `team_composite.py` (standalone; reuses the builders above)
+- **Logic:** aggregates seven components to season totals per team —
+  win percentage (ties = half a win), turnover margin/game (takeaways −
+  giveaways, from `turnover_margin_by_team_game`; higher = better, no flip
+  needed since giveaways are already subtracted inside the margin),
+  first downs/game, yards per play, rush yards/attempt, RZ TD rate, and
+  pressure allowed rate (`(qb_hit | sack) / dropbacks`, from the dropback
+  side, so it's pressure the QB's own line gave up). Each component is
+  **percentile-ranked across the 32 teams** (0–100, "better than X% of the
+  league"), the pressure component is flipped (less = better), and the
+  weighted average is the **Game Performance Score** (0–100). Percentiles
+  instead of z-scores so one outlier team can't skew the scale. Weights
+  are an editable `WEIGHTS` dict at the top of the script (default: win%
+  .20, turnover margin .15, the five remaining stat components .13 each).
+- **Validation caveat:** the game-level validation score excludes win% —
+  at single-game level win% *is* the result, so including it would make
+  the winners-vs-losers check circular. Only the stat components are
+  validated there (renormalized to sum to 1).
+- **NaN handling:** a team with zero red-zone trips gets the league-average
+  RZ TD rate (neutral), so early-season samples don't produce NaN scores.
+- **CLI:** `python team_composite.py --seasons 2026`
+  Add `--qb_csv <path>` to join the score onto a per-QB CSV (on `team`) —
+  built for attaching to QB-rating-style rows like `qb_adot_catchpct.csv`.
+- **Validation:** the script also builds a game-level version of the score
+  and reports its correlation with scoring margin plus winner/loser means
+  (2026 wk1: corr 0.56, wins 59.0 vs losses 42.9).
+
 ## UI-only naming changes (no logic change)
 
 Several columns were renamed purely for table width once first downs, QB
