@@ -312,6 +312,41 @@ then Phase 2 (as-of-date SRS, no leakage).
 
 ---
 
+**Q: Build the Phase 5 walk-forward harness, run on season-total SRS
+(the leaky rough read, build-order step 2).**
+
+A: **Built.** `backtest_srs.py`: walks season → week → games calling a
+`rating_fn(season, week)` hook (the only leakage-sensitive piece — the
+stub returns season-total SRS; Phase 2 swaps in as-of ratings behind the
+same hook). HFA and margin-error std are **estimated from data**, not
+guessed; `BREAKEVEN_COVER_PCT = 52.4` is a named constant per the plan.
+ATS grading: bet = side the edge points to (the decided rule), pushes
+excluded from cover rates.
+
+Rough run, 2021–2025 pooled (1,424 games, 32 neutral-site):
+
+| Metric | Leaky result |
+|---|---|
+| HFA / margin-err std | +2.10 pts / 11.61 pts (std low — leak shrinks residuals) |
+| Win accuracy | **70.4%** (home baseline on same games: 54.5%) |
+| Brier | 0.195 |
+| ATS 0-1 pt edge | 50.0% (n=202) — below breakeven |
+| ATS 1-2 pt | 57.6% (n=217) — above |
+| ATS 2-3 pt | 64.8% (n=193) — above |
+| ATS 3+ pt | 69.3% (n=779) — above |
+| Betting rule \|edge\| ≥ 4 | **71.1%** (n=616) |
+
+**Read: this is the ceiling, not the truth.** The leak shows up exactly
+where theory says it should — big edges self-justify because the rating
+already saw the blowouts that created them. The bucket monotonicity
+(50→58→65→69%) is real structure the honest version should preserve in
+weaker form; the absolute percentages will fall. The honest bar for
+Phase 2's no-leakage re-run: 3+ bucket and the ≥4 rule line still
+clearing 52.4%. Same harness, one-line swap (`rating_fn`), so the delta
+between runs = the exact cost of the leakage fix.
+
+---
+
 **Q: Build Phase 2 — as-of-date SRS (no leakage) — and re-run the
 backtest honestly.**
 
@@ -523,35 +558,22 @@ zero-filled. Explainer + STATS_REFERENCE updated.
 
 ---
 
-**Q: Build the Phase 5 walk-forward harness, run on season-total SRS
-(the leaky rough read, build-order step 2).**
+**Q: Can't the QB EPA trailing reach back to the previous season?**
 
-A: **Built.** `backtest_srs.py`: walks season → week → games calling a
-`rating_fn(season, week)` hook (the only leakage-sensitive piece — the
-stub returns season-total SRS; Phase 2 swaps in as-of ratings behind the
-same hook). HFA and margin-error std are **estimated from data**, not
-guessed; `BREAKEVEN_COVER_PCT = 52.4` is a named constant per the plan.
-ATS grading: bet = side the edge points to (the decided rule), pushes
-excluded from cover rates.
+A: **Yes — built.** Same cold-start discipline as the SRS blend:
+`epa_db = db/(db+K)·current + K/(db+K)·shrink·prior`, K=150
+pseudo-dropbacks (~4-5 games), shrink=0.7 (year-over-year regression;
+both flagged placeholders like SRS's k/shrink). Week 1 is mostly the
+regressed prior, current season takes over as dropbacks accumulate;
+QBs with no prior (rookies) are current-only; QBs with a prior but no
+dropbacks yet this season (injured starters) still show the regressed
+prior. Two bugs found by testing, both fixed: (1) `0 × NaN = NaN`
+poisoned the blend exactly when w=0 (week 1 showed nothing) — cur is
+zero-filled before the multiply; (2) prior-only QBs were absent from
+the lookup frame entirely. Verified: week 1 2026 shows regressed-2025
+numbers for veterans (D.Maye +0.12, M.Stafford +0.15, B.Young −0.04);
+week 2 blends week-1 actuals with the prior (J.Allen +0.15 vs. pure
+week-1 +0.45). Justification already in the log: the opener backtests
+found a returning QB's own prior-season EPA was the best week-1
+predictor tested.
 
-Rough run, 2021–2025 pooled (1,424 games, 32 neutral-site):
-
-| Metric | Leaky result |
-|---|---|
-| HFA / margin-err std | +2.10 pts / 11.61 pts (std low — leak shrinks residuals) |
-| Win accuracy | **70.4%** (home baseline on same games: 54.5%) |
-| Brier | 0.195 |
-| ATS 0-1 pt edge | 50.0% (n=202) — below breakeven |
-| ATS 1-2 pt | 57.6% (n=217) — above |
-| ATS 2-3 pt | 64.8% (n=193) — above |
-| ATS 3+ pt | 69.3% (n=779) — above |
-| Betting rule \|edge\| ≥ 4 | **71.1%** (n=616) |
-
-**Read: this is the ceiling, not the truth.** The leak shows up exactly
-where theory says it should — big edges self-justify because the rating
-already saw the blowouts that created them. The bucket monotonicity
-(50→58→65→69%) is real structure the honest version should preserve in
-weaker form; the absolute percentages will fall. The honest bar for
-Phase 2's no-leakage re-run: 3+ bucket and the ≥4 rule line still
-clearing 52.4%. Same harness, one-line swap (`rating_fn`), so the delta
-between runs = the exact cost of the leakage fix.

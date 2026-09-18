@@ -458,11 +458,15 @@ print(hits_sacks)
   - `pred_right` — ✓ if the predicted winner actually won.
   - `away_qb` / `home_qb` — listed starter (games.csv `*_qb_name`,
     bridged to pbp style via `to_pbp_name`: "Jared Goff" → "J.Goff")
-    and, in the app, his **EPA/dropback through prior weeks**
-    (`cached_qb_epa_asof` in streamlit_scoreboard.py: trailing per-QB
-    sums, reindexed over bye weeks — same number as the QB chart's
-    x-axis). **Context display only — not in the model** (srs-v1
-    unchanged), so the live log and grading are unaffected.
+    and, in the app, his **EPA/dropback**, trailing through prior weeks
+    of the season and **cold-start blended with the prior season**
+    (`cached_qb_epa_asof` in streamlit_scoreboard.py):
+    `epa_db = db/(db+K)·current + K/(db+K)·shrink·prior` with
+    K=150 pseudo-dropbacks, shrink=0.7 (placeholders, same status as
+    SRS's k/shrink). Week 1 is mostly last season regressed; current
+    dropbacks take over as they accumulate; QBs with no prior season
+    use current-only. **Context display only — not in the model**
+    (srs-v1 unchanged), so the live log and grading are unaffected.
 - **Live log (Phase 6):** `--log` appends unplayed games to
   `predictions_log.csv` (refuses played games and duplicates);
   `grade_predictions.py` grades the log per `model_version` (win acc,

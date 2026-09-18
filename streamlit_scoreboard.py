@@ -105,38 +105,84 @@ def cached_srs_ratings(season: int):
     return blended_asof_ratings(cached_games(), [season])
 
 
+# QB EPA blend constants, same placeholder status as SRS's k/shrink:
+# QB_K_PSEUDO_DB = prior season's strength in pseudo-dropbacks (~4-5 games
+# worth), QB_SHRINK = year-over-year regression (new team/scheme/aging).
+QB_K_PSEUDO_DB = 150.0
+QB_SHRINK = 0.7
+
+
 @st.cache_data(show_spinner="Loading QB stats for this season...")
 def cached_qb_epa_asof(season: int) -> pd.DataFrame:
-    """Per (week, QB): EPA/dropback through PRIOR weeks of the season
-    (trailing -- so a week-2 game shows week-1 numbers, matching the QB
-    EPA/catch% chart's x-axis). CONTEXT DISPLAY ONLY: not part of the
-    prediction model (srs-v1 stays pure SRS), so logs/grading are
-    unaffected."""
-    pbp = load_pbp(season)
-    db = pbp[(pbp["qb_dropback"] == 1) & pbp["passer_player_name"].notna()]
-    per = db.groupby(["passer_player_name", "week"]).agg(
-        epa=("epa", "sum"), n=("epa", "count")).reset_index()
-    frames = []
-    for qb, grp in per.groupby("passer_player_name"):
-        grp = grp.set_index("week").reindex(range(1, 23), fill_value=0)
-        grp["epa_cum"] = grp["epa"].cumsum().shift(1).fillna(0)  # through prior weeks
-        grp["db_cum"] = grp["n"].cumsum().shift(1).fillna(0)
-        grp["passer_player_name"] = qb
-        grp["week"] = grp.index
-        frames.append(grp.reset_index(drop=True))
-    out = pd.concat(frames, ignore_index=True)
-    out["epa_db"] = out["epa_cum"] / out["db_cum"].where(out["db_cum"] > 0)
-    return out[["week", "passer_player_name", "epa_db", "db_cum"]]
+    """Per (week, QB): EPA/dropback through PRIOR weeks of the season,
+    cold-start blended with the prior season -- same discipline as the SRS
+    blend:  epa_db = db/(db+K) * current + K/(db+K) * shrink * prior.
+    Week 1 is mostly last season (regressed); the current season takes
+    over as dropbacks accumulate. QBs with no prior season (rookies) use
+    current-only. CONTEXT DISPLAY ONLY: not part of the prediction model
+    (srs-v1 stays pure SRS), so logs/grading are unaffected."""
+    cur = None
+    try:
+        pbp = load_pbp(season)
+        db = pbp[(pbp["qb_dropback"] == 1) & pbp["passer_player_name"].notna()]
+        per = db.groupby(["passer_player_name", "week"]).agg(
+            epa=("epa", "sum"), n=("epa", "count")).reset_index()
+        frames = []
+        for qb, grp in per.groupby("passer_player_name"):
+            grp = grp.set_index("week").reindex(range(1, 23), fill_value=0)
+            grp["epa_cum"] = grp["epa"].cumsum().shift(1).fillna(0)  # through prior weeks
+            grp["db_cum"] = grp["n"].cumsum().shift(1).fillna(0)
+            grp["passer_player_name"] = qb
+            grp["week"] = grp.index
+            frames.append(grp.reset_index(drop=True))
+        cur = pd.concat(frames, ignore_index=True)
+        del pbp
+    except Exception:
+        cur = pd.DataFrame(columns=["week", "passer_player_name", "epa_cum", "db_cum"])
+
+    prior = {}
+    try:
+        pbp_prev = load_pbp(season - 1)
+        db_prev = pbp_prev[(pbp_prev["qb_dropback"] == 1)
+                           & pbp_prev["passer_player_name"].notna()]
+        tot = db_prev.groupby("passer_player_name")["epa"].agg(["sum", "count"])
+        prior = (tot["sum"] / tot["count"]).to_dict()
+        del pbp_prev
+    except Exception:
+        pass  # no prior season available -> current-only for everyone
+
+    cur["cur_epa_db"] = cur["epa_cum"] / cur["db_cum"].where(cur["db_cum"] > 0)
+    cur["prior_epa_db"] = cur["passer_player_name"].map(prior)
+    w = cur["db_cum"] / (cur["db_cum"] + QB_K_PSEUDO_DB)
+    # fill cur with 0 before multiplying: w is 0 exactly when cur is NaN,
+    # but 0 * NaN = NaN would poison the blend (week 1 = pure prior)
+    blended = w * cur["cur_epa_db"].fillna(0) + (1 - w) * QB_SHRINK * cur["prior_epa_db"]
+    cur["epa_db"] = blended.fillna(cur["cur_epa_db"])  # rookies: current-only
+
+    # QBs with a prior season but no dropbacks yet THIS season (injured
+    # starters, mid-season takeovers): still show the regressed prior.
+    have_cur = set(cur["passer_player_name"])
+    prior_only = [qb for qb in prior if qb not in have_cur]
+    if prior_only:
+        extra = pd.DataFrame({
+            "week": [w_ for _ in prior_only for w_ in range(1, 23)],
+            "passer_player_name": [qb for qb in prior_only for _ in range(1, 23)],
+            "epa_db": [QB_SHRINK * prior[qb] for qb in prior_only for _ in range(1, 23)],
+            "db_cum": 0,
+        })
+        cur = pd.concat([cur, extra], ignore_index=True)
+    return cur[["week", "passer_player_name", "epa_db", "db_cum"]]
 
 
 def qb_lookup(qb_df, week, full_name):
-    """(abbreviated name, epa_db or None) for one game's listed starter."""
+    """(abbreviated name, epa_db or None) for one game's listed starter.
+    None epa_db means genuinely no data (rookie with no dropbacks yet)."""
     abbr = to_pbp_name(full_name)
     if abbr is None:
         return None, None
     row = qb_df[(qb_df["week"] == week) & (qb_df["passer_player_name"] == abbr)]
-    if row.empty or row["db_cum"].iloc[0] == 0:
-        return abbr, None  # no prior-week dropbacks yet (e.g. week 1)
+    if row.empty or pd.isna(row["epa_db"].iloc[0]):
+        return abbr, None
     return abbr, row["epa_db"].iloc[0]
 
 
@@ -305,8 +351,9 @@ def main():
                 "probability (normal curve, 13.4-point error std from the backtest). "
                 "This is about *winning*, never about covering the spread.\n\n"
                 "**away_qb / home_qb** — each team's listed starter and his "
-                "EPA/dropback through prior weeks (same number as the QB "
-                "EPA/catch% chart's x-axis). Context only — NOT part of the model.\n\n"
+                "EPA/dropback: trailing through prior weeks this season, "
+                "blended with last season early in the year (rookies: this "
+                "season only). Context only — NOT part of the model.\n\n"
                 "**final / pred_right** — the actual score, and whether the "
                 "predicted winner actually won."
             )
