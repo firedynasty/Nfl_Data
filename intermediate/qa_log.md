@@ -638,5 +638,13 @@ convention as build_qb_csv's default) — added after a screenshot showed
 C.Johnston (a PUNTER with one fake-punt dropback at -1.85 EPA, 0%
 catch) stretching the x-axis to -2.0 and squashing all real QBs into a
 clump; the filter also clears one-play backups that made labels
-unreadable. Week 1 shows an honest "no QB numbers yet" note.
+unreadable. Week 1 shows an honest "no QB numbers yet" note. Later
+additions: catch% y-axis floored at 50% (every charted QB is >55%
+anyway; sub-50% was all outlier noise), and **force-directed label
+repulsion** (`repel_labels`, pure numpy — the adjustText idea with no
+matplotlib dependency, keeping Altair tooltips): labels start above
+their dot, iterate label-vs-label / label-vs-point repulsion plus a
+weak pull home, then render at settled positions with gray connector
+lines. Verified: min label separation ~doubles while labels stay
+tethered to their dots.
 

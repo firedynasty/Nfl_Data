@@ -14,6 +14,7 @@ Usage:
 """
 
 import altair as alt
+import numpy as np
 import pandas as pd
 import streamlit as st
 
@@ -260,6 +261,51 @@ def qb_chart_frame(season: int, week: int) -> pd.DataFrame:
     return df.dropna(subset=["score"])
 
 
+def repel_labels(xs, ys, iters=250):
+    """Force-directed label placement in pure numpy (the adjustText idea,
+    no matplotlib/adjustText dependency): labels start above their point,
+    then iterate -- label-vs-label and label-vs-other-points repulsion,
+    a weak pull home to the label's own point, clipped steps. Returns
+    (label_x, label_y) in DATA coordinates, so Altair can draw both the
+    labels and connector lines back to their dots."""
+    x = np.asarray(xs, dtype=float)
+    y = np.asarray(ys, dtype=float)
+    x0, x1 = x.min(), x.max()
+    y0, y1 = y.min(), y.max()
+    xr = (x1 - x0) or 1.0
+    yr = (y1 - y0) or 1.0
+    xn = (x - x0) / xr
+    yn = (y - y0) / yr
+    lx, ly = xn.copy(), np.clip(yn + 0.05, 0.0, 1.0)
+
+    for _ in range(iters):
+        # weak attraction home keeps every label tethered to its dot
+        fx = (xn - lx) * 0.08
+        fy = (yn - ly) * 0.08
+        # label-vs-label repulsion (only when too close)
+        dx = lx[:, None] - lx[None, :]
+        dy = ly[:, None] - ly[None, :]
+        d2 = dx * dx + dy * dy + 1e-9
+        m = d2 < 0.004
+        np.fill_diagonal(m, False)
+        push = np.where(m, 0.004 / d2, 0.0)
+        fx += (dx * push).sum(axis=1)
+        fy += (dy * push).sum(axis=1)
+        # label-vs-other-points repulsion (weaker)
+        pdx = lx[:, None] - xn[None, :]
+        pdy = ly[:, None] - yn[None, :]
+        pd2 = pdx * pdx + pdy * pdy + 1e-9
+        pm = pd2 < 0.002
+        np.fill_diagonal(pm, False)
+        ppush = np.where(pm, 0.002 / pd2, 0.0)
+        fx += (pdx * ppush).sum(axis=1) * 0.5
+        fy += (pdy * ppush).sum(axis=1) * 0.5
+        lx = np.clip(lx + np.clip(fx * 0.03, -0.03, 0.03), 0.0, 1.0)
+        ly = np.clip(ly + np.clip(fy * 0.03, -0.03, 0.03), 0.0, 1.0)
+
+    return lx * xr + x0, ly * yr + y0
+
+
 def render_qb_chart(season: int, week: int):
     """The QB EPA/catch% scatter (qb_support_chart.py's look), colored by
     Game Performance Score, rendered in-app with Altair (no matplotlib
@@ -276,6 +322,8 @@ def render_qb_chart(season: int, week: int):
         y=alt.Y("catch_pct:Q", title="CATCH %", axis=alt.Axis(format=".0%"),
                 scale=alt.Scale(domainMin=0.5)),  # floor at 50%: sub-50% was
     )                                             # all outlier noise anyway
+    lx, ly = repel_labels(df["epa_db"], df["catch_pct"])
+    labels = df.assign(lx=lx, ly=ly)
     pts = base.mark_circle(size=130, stroke="black", strokeWidth=0.5).encode(
         color=alt.Color("score:Q", title="Game Perf",
                         scale=alt.Scale(scheme="redyellowgreen", domain=[20, 90])),
@@ -284,8 +332,13 @@ def render_qb_chart(season: int, week: int):
                  alt.Tooltip("catch_pct:Q", format=".1%"),
                  alt.Tooltip("score:Q", format=".0f")],
     )
-    txt = base.mark_text(dy=-11, fontSize=9).encode(text="passer_player_name:N")
-    st.altair_chart(pts + txt, use_container_width=True)
+    links = alt.Chart(labels).mark_rule(color="gray", strokeWidth=0.5, opacity=0.6).encode(
+        x="epa_db:Q", y="catch_pct:Q", x2="lx:Q", y2="ly:Q",
+    )
+    txt = alt.Chart(labels).mark_text(fontSize=9).encode(
+        x="lx:Q", y="ly:Q", text="passer_player_name:N",
+    )
+    st.altair_chart(pts + links + txt, use_container_width=True)
     st.caption(f"Hover any dot for team, record, and exact numbers. QBs with "
                f"<{MIN_CHART_DROPBACKS} dropbacks this season are hidden "
                f"(punters, trick plays, mop-up). Same construction as the "
