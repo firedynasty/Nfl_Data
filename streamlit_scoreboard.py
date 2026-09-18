@@ -273,8 +273,9 @@ def render_qb_chart(season: int, week: int):
         return
     base = alt.Chart(df).encode(
         x=alt.X("epa_db:Q", title="EPA / Dropback"),
-        y=alt.Y("catch_pct:Q", title="CATCH %", axis=alt.Axis(format=".0%")),
-    )
+        y=alt.Y("catch_pct:Q", title="CATCH %", axis=alt.Axis(format=".0%"),
+                scale=alt.Scale(domainMin=0.5)),  # floor at 50%: sub-50% was
+    )                                             # all outlier noise anyway
     pts = base.mark_circle(size=130, stroke="black", strokeWidth=0.5).encode(
         color=alt.Color("score:Q", title="Game Perf",
                         scale=alt.Scale(scheme="redyellowgreen", domain=[20, 90])),
