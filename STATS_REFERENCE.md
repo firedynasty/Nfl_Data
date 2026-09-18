@@ -440,6 +440,27 @@ print(hits_sacks)
     PFR blocks automated fetches (403), so the check ran on a
     browser-saved copy of their standings page.
 
+### Weekly predictions (`predict_week.py`)
+- **Script:** `predict_week.py [--season S --week W]` (defaults: current).
+  `detail_for_games()` is the single source of truth (CLI sheet, Streamlit
+  Predictions view, app attach-to-cards mode, and the live log all consume
+  it). `MODEL_VERSION` at top of file — bump on any model change.
+- **Columns:**
+  - `away_srs` / `home_srs` — as-of SRS per team (see SRS entry above).
+  - `model_line` — `home_srs − away_srs + HFA` (HFA = +2.2, from the
+    2021-2025 honest backtest; 0 on neutral sites), in betting notation.
+  - `market_line` — the sportsbook's `spread_line`, same notation.
+  - `edge` — model − market, home-positive (+ = model likes home more).
+  - `pred` / `win_pct` — the predicted OUTRIGHT winner (bigger predicted
+    margin; nothing to do with the spread) and its calibrated probability:
+    `normal_cdf(pred_margin / 13.44)` (std from the same backtest).
+  - `final` — `score(nickname)-score(nickname)`, away-home.
+  - `pred_right` — ✓ if the predicted winner actually won.
+- **Live log (Phase 6):** `--log` appends unplayed games to
+  `predictions_log.csv` (refuses played games and duplicates);
+  `grade_predictions.py` grades the log per `model_version` (win acc,
+  Brier, ATS cover) against actual results.
+
 ## UI-only naming changes (no logic change)
 
 Several columns were renamed purely for table width once first downs, QB

@@ -27,7 +27,7 @@ from nfl_box_score_analysis import (
     team_rushing_by_team_game,
     turnover_margin_by_team_game,
 )
-from predict_week import build_week_table, HFA_POINTS, MARGIN_STD
+from predict_week import build_week_table, detail_for_games, line_string, HFA_POINTS, MARGIN_STD
 from srs import blended_asof_ratings
 
 LOGOS_URL = "https://raw.githubusercontent.com/nflverse/nfldata/master/data/logos.csv"
@@ -190,6 +190,14 @@ def main():
                 index=weeks_available.index(default_week) if default_week in weeks_available else 0,
             )
 
+        show_preds = False
+        if view_by != "Predictions":
+            show_preds = st.toggle(
+                "Attach prediction row to games", value=False,
+                help="Adds each game's SRS ratings, model line, market line, and "
+                     "predicted winner right under the score.",
+            )
+
         st.divider()
         st.caption(
             "Note on QB Hits/Sacks: hits usually include sacks, but not with "
@@ -200,7 +208,8 @@ def main():
 
     if view_by == "Predictions":
         ratings = cached_srs_ratings(season)
-        pred_df = build_week_table(games, season, week, ratings, k=4.0, shrink=0.7)
+        pred_df, _ = build_week_table(games, season, week, ratings, k=4.0, shrink=0.7,
+                                      names=names)
 
         st.caption(f"Season {season}, Week {week} — {len(pred_df)} games · "
                    f"SRS ratings as of before week {week} (no games from this week or later)")
@@ -223,6 +232,25 @@ def main():
             "moneyline) no edge bucket cleared the 52.4% breakeven — this sheet "
             "says how good the teams are, not what to bet."
         )
+        with st.expander("How are these predictions made?"):
+            st.markdown(
+                "**away_srs / home_srs** — each team's Simple Rating System number, "
+                "in points: average scoring margin plus the average rating of the "
+                "opponents faced (opponent-adjusted; 0 = league average). Uses only "
+                "games *before* this week, blended with last season early in the year.\n\n"
+                "**model_line** — home_srs − away_srs + 2.2 (home-field constant "
+                "estimated from the 2021-2025 backtest): the margin the model "
+                "considers fair, in betting notation.\n\n"
+                "**market_line** — the sportsbook's actual spread.\n\n"
+                "**edge** — model_line − market_line (home-positive): + means the "
+                "model likes the home team *more than the market does*.\n\n"
+                "**pred / win_pct** — the team the model thinks **wins the game "
+                "outright** (bigger predicted margin), and its calibrated "
+                "probability (normal curve, 13.4-point error std from the backtest). "
+                "This is about *winning*, never about covering the spread.\n\n"
+                "**final / pred_right** — the actual score, and whether the "
+                "predicted winner actually won."
+            )
         return
 
     if view_by == "Team":
@@ -236,6 +264,10 @@ def main():
 
     shown_games["gameday"] = pd.to_datetime(shown_games["gameday"])
     shown_games = shown_games.sort_values(["week", "gameday", "gametime"])
+
+    pred_by_id = None
+    if show_preds:
+        pred_by_id = detail_for_games(shown_games, cached_srs_ratings(season)).set_index("game_id")
 
     export_df = game_stats[game_stats["game_id"].isin(shown_games["game_id"])].copy()
     export_df.insert(0, "season", season)
@@ -277,6 +309,22 @@ def main():
             time_suffix = f" {game.gametime}" if not final and pd.notna(game.gametime) else ""
             week_prefix = f"Week {game.week} · " if view_by == "Team" else ""
             st.caption(f"{week_prefix}{status} · {day_label(game.gameday)}{time_suffix}")
+
+            if pred_by_id is not None and game.game_id in pred_by_id.index:
+                p = pred_by_id.loc[game.game_id]
+                model_line = line_string(game.home_team, game.away_team, p["pred_margin"])
+                market_line = (line_string(game.home_team, game.away_team, p["spread_line"])
+                               if pd.notna(p["spread_line"]) else "-")
+                win_pct = 100 * max(p["home_win_prob"], 1 - p["home_win_prob"])
+                right = ""
+                if final:
+                    correct = (game.home_score > game.away_score) == (p["pred_winner"] == game.home_team)
+                    right = f" · {'✓ right' if correct else '✗ wrong'}"
+                st.caption(
+                    f"🔮 SRS {game.away_team} {p['away_srs']:+.1f} @ {game.home_team} "
+                    f"{p['home_srs']:+.1f} · model {model_line} · market {market_line} · "
+                    f"pred {p['pred_winner']} {win_pct:.0f}%{right}"
+                )
 
             if final:
                 st.table(

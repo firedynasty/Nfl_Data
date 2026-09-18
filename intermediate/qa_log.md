@@ -471,6 +471,41 @@ next git push.
 
 ---
 
+**Q: Build Phase 6 (live logging + grading)? And how should future
+tweaks work?**
+
+A: **Built.** `predict_week.py --log` appends unplayed games to
+`predictions_log.csv` with `MODEL_VERSION` (`srs-v1`, in
+predict_week.py — bump on ANY model change) and timestamp. Discipline
+enforced in code: already-played games refused (post-hoc), duplicates
+refused. `grade_predictions.py` joins the log to results: per version —
+win acc, Brier, ATS cover, |edge|≥4 line, home baseline, with the
+"compare versions only on shared weeks" rule printed. First 15 live
+predictions logged for 2026 week 2 before kickoff; grades land Sunday.
+**Tweak loop (the user's workflow question):** (1) one-sentence
+hypothesis, (2) honest backtest first — cheap, and if it doesn't beat
+v1 there, stop; (3) if it passes, bump version and log live; (4) the
+shared-weeks comparison in grade_predictions.py is the verdict that
+counts. One tweak at a time; never tune ON the live log — it's the
+holdout.
+
+---
+
+**Q: Readability requests + clarification: does `pred`/`pred_right` mean
+who WINS (not who covers)?**
+
+A: Confirmed: `pred` = predicted outright winner; the spread only exists
+in `market_line`/`edge` and the sheet never grades covers. Then built:
+(1) `final` now renders as `27(49ers)-7(Rams)` (nicknames, away-home);
+(2) app "Attach prediction row to games" toggle — every game card in
+Week/Team views gets a 🔮 line under the score (SRS pair, model vs
+market line, pred + win%, ✓/✗ on played games); (3) "How are these
+predictions made?" expander in the Predictions view + a Weekly
+predictions section in STATS_REFERENCE.md documenting every column.
+All app paths re-smoke-tested.
+
+---
+
 **Q: Build the Phase 5 walk-forward harness, run on season-total SRS
 (the leaky rough read, build-order step 2).**
 

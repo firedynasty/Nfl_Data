@@ -209,6 +209,15 @@ That kind of table is what tells you, honestly, whether "bet when edge >
 
 ## Phase 6 — Logging + grading for ongoing use
 
+**Status: BUILT (2026-09-17)** — `predict_week.py --log` appends unplayed
+games to `predictions_log.csv` (refuses already-played games and
+duplicates; `MODEL_VERSION = "srs-v1"` in `predict_week.py` — bump on
+any model change). `grade_predictions.py` grades the log against actual
+results per version (win acc, Brier, ATS cover, |edge|≥4 line, home
+baseline). First live entries: 15 games logged for 2026 week 2 before
+kickoff. The log file stays local (uncommitted) — commit it manually if
+you want it backed up.
+
 (Already discussed in `qa_log.md` — restated here as the last phase since
 it's what turns this from a one-off backtest into something you check
 every week going forward.)
