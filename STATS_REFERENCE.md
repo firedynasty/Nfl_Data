@@ -357,19 +357,40 @@ print(hits_sacks)
 
 ### Game Performance Score (composite)
 - **Script:** `team_composite.py` (standalone; reuses the builders above)
-- **Logic:** aggregates seven components to season totals per team —
-  win percentage (ties = half a win), turnover margin/game (takeaways −
-  giveaways, from `turnover_margin_by_team_game`; higher = better, no flip
-  needed since giveaways are already subtracted inside the margin),
-  first downs/game, yards per play, rush yards/attempt, RZ TD rate, and
-  pressure allowed rate (`(qb_hit | sack) / dropbacks`, from the dropback
-  side, so it's pressure the QB's own line gave up). Each component is
-  **percentile-ranked across the 32 teams** (0–100, "better than X% of the
-  league"), the pressure component is flipped (less = better), and the
-  weighted average is the **Game Performance Score** (0–100). Percentiles
-  instead of z-scores so one outlier team can't skew the scale. Weights
-  are an editable `WEIGHTS` dict at the top of the script (default: win%
-  .20, turnover margin .15, the five remaining stat components .13 each).
+- **Logic:** aggregates eight components to season totals per team —
+  win percentage (ties = half a win), **QB EPA per dropback** (see below),
+  turnover margin/game (takeaways − giveaways, from
+  `turnover_margin_by_team_game`; higher = better, no flip needed since
+  giveaways are already subtracted inside the margin), first downs/game,
+  yards per play, rush yards/attempt, RZ TD rate, and pressure allowed rate
+  (`(qb_hit | sack) / dropbacks`, from the dropback side, so it's pressure
+  the QB's own line gave up). Each component is **percentile-ranked across
+  the 32 teams** (0–100, "better than X% of the league"), the pressure
+  component is flipped (less = better), and the weighted average is the
+  **Game Performance Score** (0–100). Percentiles instead of z-scores so one
+  outlier team can't skew the scale. Weights are an editable `WEIGHTS` dict
+  at the top of the script (default: win% .18, EPA/dropback .17, turnover
+  margin .13, first downs/yards-per-play .10 each, rush yds/att .12, RZ TD
+  .11, pressure rate .09).
+- **QB EPA per dropback (added Sep 2026):**
+  - **Builder:** `qb_epa_by_team_game(pbp)`, local to `team_composite.py`
+    (same as `pressure_allowed_by_team_game` — composite-specific builders
+    live here, not in `nfl_box_score_analysis.py`).
+  - **Logic:** filter to `qb_dropback == 1` (pass attempts, sacks,
+    scrambles), sum the play-level `epa` column per team-game as
+    `total_epa`. Divided by `dropbacks` (already collected by
+    `pressure_allowed_by_team_game`) at the season-table step to get
+    EPA/dropback. Unlike aDOT/catch% (used in `qb_support_chart.py`), this
+    measures play *value*, not throwing style — it's the standard team
+    passing-efficiency metric in NFL analytics.
+  - **Why added:** the win-prediction discussion identified QB play as
+    likely the single strongest team-strength signal, and not well
+    captured by the other seven components (they blend passing/rushing/
+    O-line together). Validated head-to-head on 2023–2025 (2,600+ games,
+    same data, old vs. new weights): correlation with scoring margin
+    **0.615 → 0.661** — a real gain, not week-1 noise (a quick single-week
+    2026 check showed 0.56 → 0.67, but that's only 32 games and too small
+    to trust on its own).
 - **Validation caveat:** the game-level validation score excludes win% —
   at single-game level win% *is* the result, so including it would make
   the winners-vs-losers check circular. Only the stat components are
@@ -381,7 +402,43 @@ print(hits_sacks)
   built for attaching to QB-rating-style rows like `qb_adot_catchpct.csv`.
 - **Validation:** the script also builds a game-level version of the score
   and reports its correlation with scoring margin plus winner/loser means
-  (2026 wk1: corr 0.56, wins 59.0 vs losses 42.9).
+  (2023–2025, current 8-component weights: corr 0.66, wins 59.2 vs losses
+  40.8).
+
+### SRS (Simple Rating System)
+- **Script:** `srs.py` (standalone; reuses `load_games()` +
+  `build_long_results()` from `nfl_box_score_analysis.py` — needs only
+  final scores, no play-by-play download).
+- **Logic:** one opponent-adjusted rating per team, in points:
+  `rating = avg scoring margin + avg(rating of opponents faced)`, solved
+  iteratively — opponents averaged over *games* (facing a team twice
+  counts twice), re-centered to league mean 0 each pass. The update is
+  **damped** (half-steps): on ~1-game-per-team early-season graphs the
+  undamped iteration period-2 oscillates forever; the damped fixed point
+  is identical. Converges in <100 iterations. League average is 0 by
+  construction; +6.2 reads as "~6 points better than an average team" —
+  the same units as a point spread, which is why it anchors the
+  prediction pipeline (see `intermediate/plan.md`).
+- **As-of (no-leakage) variants:** `solve_srs_asof(long, season, week)`
+  solves from games with `week < W` only; `blended_asof_ratings(games,
+  seasons, k, shrink)` wraps that with a cold-start blend —
+  `g/(g+k)·current + k/(g+k)·shrink·prior_season` — so week 1 is the
+  regressed prior season and current games take over as they accumulate.
+  k/shrink are placeholder constants pending a backtest sweep.
+- **CLI:** `python srs.py --season 2025` · `--cap 24` caps each game's
+  margin at ±24 before averaging · `--validate` runs the in-sample check.
+- **Validation (done, Sep 2026):**
+  - In-sample per-game home-margin prediction beats raw average margin
+    (the thing SRS is supposed to beat via schedule correction): 2025
+    corr 0.604 vs 0.592, MAE 9.07 vs 9.18; 2024 corr 0.608 vs 0.603.
+    In-sample only — the real bar is Phase 5's walk-forward.
+  - **Matches Pro-Football-Reference's published 2025 SRS:** corr 0.9994,
+    MAE 0.20 pts, max abs diff 0.25 — but only when scoped to
+    **regular-season games**. PFR's SRS excludes the playoffs; `srs.py`
+    includes them by default (deliberate: for prediction you want every
+    completed game; filter `game_type == 'REG'` only to match PFR).
+    PFR blocks automated fetches (403), so the check ran on a
+    browser-saved copy of their standings page.
 
 ## UI-only naming changes (no logic change)
 
