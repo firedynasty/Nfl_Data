@@ -13,6 +13,7 @@ Usage:
     streamlit run streamlit_scoreboard.py
 """
 
+import altair as alt
 import pandas as pd
 import streamlit as st
 
@@ -37,6 +38,12 @@ from predict_week import (
 )
 from srs import blended_asof_ratings
 from team_colors import BADGE_CSS, TEAM_ORDER, badge_html, nav_button_css
+from team_composite import (
+    add_game_performance_score,
+    composite_srs,
+    team_game_stats,
+    team_season_table,
+)
 
 LOGOS_URL = "https://raw.githubusercontent.com/nflverse/nfldata/master/data/logos.csv"
 TEAMS_URL = "https://raw.githubusercontent.com/nflverse/nfldata/master/data/teams.csv"
@@ -120,9 +127,12 @@ def cached_qb_epa_asof(season: int) -> pd.DataFrame:
     current-only. CONTEXT DISPLAY ONLY: not part of the prediction model
     (srs-v1 stays pure SRS), so logs/grading are unaffected."""
     cur = None
+    last_team = {}
     try:
         pbp = load_pbp(season)
         db = pbp[(pbp["qb_dropback"] == 1) & pbp["passer_player_name"].notna()]
+        last_team = (db.sort_values("week").groupby("passer_player_name")["posteam"]
+                     .last().to_dict())  # for chart display; latest team if traded
         per = db.groupby(["passer_player_name", "week"]).agg(
             epa=("epa", "sum"), n=("epa", "count"),
             comp=("complete_pass", "sum"), att=("pass_attempt", "sum")).reset_index()
@@ -137,9 +147,8 @@ def cached_qb_epa_asof(season: int) -> pd.DataFrame:
         cur = pd.concat(frames, ignore_index=True)
         del pbp
     except Exception:
-        cur = pd.DataFrame(columns=["week", "passer_player_name", "epa_cum", "db_cum",
-                                    "comp_cum", "att_cum"])
-        cur = cur.rename(columns={"db_cum": "n_cum"})
+        cur = pd.DataFrame(columns=["week", "passer_player_name", "team", "epa_cum",
+                                    "n_cum", "comp_cum", "att_cum"])
 
     prior_epa, prior_catch = {}, {}
     try:
@@ -164,6 +173,7 @@ def cached_qb_epa_asof(season: int) -> pd.DataFrame:
     cur["cur_catch"] = cur["comp_cum"] / cur["att_cum"].where(cur["att_cum"] > 0)
     cur["prior_epa_db"] = cur["passer_player_name"].map(prior_epa)
     cur["prior_catch"] = cur["passer_player_name"].map(prior_catch)
+    cur["team"] = cur["passer_player_name"].map(last_team)
     w = cur["n_cum"] / (cur["n_cum"] + QB_K_PSEUDO_DB)
     # fill cur with 0 before multiplying: w is 0 exactly when cur is NaN,
     # but 0 * NaN = NaN would poison the blend (week 1 = pure prior)
@@ -185,7 +195,7 @@ def cached_qb_epa_asof(season: int) -> pd.DataFrame:
             "n_cum": 0,
         })
         cur = pd.concat([cur, extra], ignore_index=True)
-    return cur[["week", "passer_player_name", "epa_db", "catch_pct", "n_cum"]]
+    return cur[["week", "passer_player_name", "team", "epa_db", "catch_pct", "n_cum"]]
 
 
 def qb_lookup(qb_df, week, full_name):
@@ -213,6 +223,73 @@ def qb_label(qb_df, week, full_name):
     if catch_pct is not None:
         inner += f", {100 * catch_pct:.0f}%"
     return f"{abbr} ({inner})"
+
+
+@st.cache_data(show_spinner="Computing Game Performance Score...")
+def cached_composite_score(season: int) -> dict[str, float]:
+    """team -> Game Performance Score (0-100), the QB chart's dot color."""
+    tg = team_game_stats([season])
+    t = team_season_table(tg)
+    t["srs"] = t["team"].map(composite_srs(cached_games(), [season]))
+    t = add_game_performance_score(t)
+    return dict(zip(t["team"], t["game_performance_score"]))
+
+
+# QB chart filter: minimum dropbacks THIS SEASON to appear on the scatter.
+# Removes punters on fake punts, trick-play throwers, and one-play backups
+# (a C.Johnston at -1.85 EPA/0% wrecked the whole x-axis otherwise).
+# Same convention as build_qb_csv.py's min_dropbacks default.
+MIN_CHART_DROPBACKS = 20
+
+
+def qb_chart_frame(season: int, week: int) -> pd.DataFrame:
+    """One row per QB with enough volume THIS season (n_cum >=
+    MIN_CHART_DROPBACKS), stats as of `week`, team record, and the team's
+    Game Performance Score."""
+    qb = cached_qb_epa_asof(season)
+    df = qb[(qb["week"] == week) & (qb["n_cum"] >= MIN_CHART_DROPBACKS)].dropna(
+        subset=["epa_db", "catch_pct", "team"]).copy()
+    if df.empty:
+        return df
+    long = build_long_results(cached_games(), [season])
+    rec = long.groupby("team")["result"].apply(
+        lambda s: f"{(s == 'W').sum()}-{(s == 'L').sum()}").to_dict()
+    scores = cached_composite_score(season)
+    df["record"] = df["team"].map(rec)
+    df["score"] = df["team"].map(scores)
+    return df.dropna(subset=["score"])
+
+
+def render_qb_chart(season: int, week: int):
+    """The QB EPA/catch% scatter (qb_support_chart.py's look), colored by
+    Game Performance Score, rendered in-app with Altair (no matplotlib
+    dependency on Streamlit Cloud)."""
+    df = qb_chart_frame(season, week)
+    st.markdown(f"**QB EPA/dropback & catch% — as of week {week}, {season}** "
+                "(color = Game Performance Score)")
+    if df.empty:
+        st.caption("No QB numbers yet for this week — they appear once a QB "
+                   "has played this season.")
+        return
+    base = alt.Chart(df).encode(
+        x=alt.X("epa_db:Q", title="EPA / Dropback"),
+        y=alt.Y("catch_pct:Q", title="CATCH %", axis=alt.Axis(format=".0%")),
+    )
+    pts = base.mark_circle(size=130, stroke="black", strokeWidth=0.5).encode(
+        color=alt.Color("score:Q", title="Game Perf",
+                        scale=alt.Scale(scheme="redyellowgreen", domain=[20, 90])),
+        tooltip=["passer_player_name", "team", "record",
+                 alt.Tooltip("epa_db:Q", format=".3f"),
+                 alt.Tooltip("catch_pct:Q", format=".1%"),
+                 alt.Tooltip("score:Q", format=".0f")],
+    )
+    txt = base.mark_text(dy=-11, fontSize=9).encode(text="passer_player_name:N")
+    st.altair_chart(pts + txt, use_container_width=True)
+    st.caption(f"Hover any dot for team, record, and exact numbers. QBs with "
+               f"<{MIN_CHART_DROPBACKS} dropbacks this season are hidden "
+               f"(punters, trick plays, mop-up). Same construction as the "
+               f"standalone QB chart, but as-of the selected week with the "
+               f"prior-season blend.")
 
 
 def current_season_and_week(games: pd.DataFrame) -> tuple[int, int]:
@@ -315,6 +392,10 @@ def main():
                 "Week", weeks_available,
                 index=weeks_available.index(default_week) if default_week in weeks_available else 0,
             )
+            if st.button("📈 QB chart", use_container_width=True,
+                         help="EPA/dropback vs catch% scatter as of the selected "
+                              "week, colored by Game Performance Score"):
+                st.session_state["show_qb_chart"] = not st.session_state.get("show_qb_chart", False)
 
         show_preds = False
         if view_by != "Predictions":
@@ -353,6 +434,8 @@ def main():
             use_container_width=True,
         )
         st.dataframe(pred_df, hide_index=True, use_container_width=True)
+        if st.session_state.get("show_qb_chart"):
+            render_qb_chart(season, week)
         st.caption(
             f"away_srs/home_srs: opponent-adjusted team rating in points "
             f"(0 = league average; HFA {HFA_POINTS:+.1f}, win-prob std {MARGIN_STD:.1f}). "
@@ -397,6 +480,8 @@ def main():
     else:
         shown_games = season_games[season_games["week"] == week].copy()
         st.caption(f"Season {season}, Week {week} — {len(shown_games)} games")
+        if st.session_state.get("show_qb_chart"):
+            render_qb_chart(season, week)
 
     # Team jump grid: one colored button per team, no scrolling needed
     st.markdown("---")

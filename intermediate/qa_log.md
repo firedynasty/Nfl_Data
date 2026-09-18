@@ -619,3 +619,24 @@ itself can't serialize keyed segmented_controls (harness-only quirk,
 browsers fine). Commit includes the previously-uncommitted EPA-session
 changes in team_composite.py (user-approved).
 
+---
+
+**Q: Chart button near the week dropdown — QB EPA/catch% scatter
+colored by Game Performance Score?**
+
+A: **Built.** "📈 QB chart" button in the sidebar (appears wherever the
+week dropdown does — Week and Predictions views) toggles an in-app
+Altair chart: x = EPA/dropback, y = catch%, color = Game Performance
+Score (0-100, red→green), per-QB labels, hover tooltips with team /
+record / exact numbers. Data is the app's own trailing-blend QB frame
+(`cached_qb_epa_asof`, now carrying team) at the selected week, plus a
+new `cached_composite_score` (team_composite pipeline incl. the new SRS
+component). Altair instead of matplotlib deliberately — Streamlit Cloud
+has altair bundled, matplotlib isn't a declared dependency. Filters to
+QBs with >= 20 dropbacks this season (`MIN_CHART_DROPBACKS`, same
+convention as build_qb_csv's default) — added after a screenshot showed
+C.Johnston (a PUNTER with one fake-punt dropback at -1.85 EPA, 0%
+catch) stretching the x-axis to -2.0 and squashing all real QBs into a
+clump; the filter also clears one-play backups that made labels
+unreadable. Week 1 shows an honest "no QB numbers yet" note.
+
