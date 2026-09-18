@@ -307,3 +307,38 @@ itself, not just the display):
   (injuries/benchings) is the untested variant with the better prior:
   the opener backtests found a returning QB's *own* EPA was the best
   week-1 signal tested, and catch% added on top of it there.
+
+## Exploration backlog (from post-game analyses, Sep 2026)
+
+Ideas the user wants to test from watching SF@LA and DET@BUF box
+scores. **Caution:** these were born from post-hoc readings of two
+games — exactly how bad features get made ("what explained THIS game
+must predict the NEXT one"). They go in the backlog to be TESTED by
+the honest loop (as-of backtest vs M0/M1 on identical games → only if
+it wins: MODEL_VERSION bump, log, grade), not to be believed. Ranked
+by prior:
+
+1. **Short-window pressure rate (trailing 1-2 games)** — "a protection
+   weakness exposed last week gets exploited again" (the DET/BUF note).
+   Distinct from the season-trailing pressure already in the blend.
+   O-line injuries/breakdowns cluster in time; pressure-allowed is one
+   of the more stable week-to-week team stats. Test: `pressure_diff_recent`
+   (last 2 games, as-of) in `backtest_blend.py` FEATURES. Prior:
+   MEDIUM-HIGH — best idea of the batch; but the market reads injury
+   reports too.
+2. **Recency-weighted SRS** — the umbrella version of the same
+   instinct: weight recent games' margins more in the SRS solve (decay
+   parameter in `game_margins` before `solve_srs`). This was already on
+   the candidates list; the "short-term form" observation is another
+   vote for it. Prior: MEDIUM.
+3. **Trailing turnover margin** — "the turnover battle flipped the
+   game." Honest prior: LOW — turnovers are high-variance and barely
+   autocorrelated week to week; fumble recovery is luck, INT rate has
+   only modest QB-driven stability. Cheap to test the same way; expect
+   nothing, keep only if the backtest insists.
+4. **Recent red-zone TD rate** — short-window version of the RZ
+   component. Prior: LOW-MEDIUM — red-zone numbers are small-sample
+   noisy even at season level; as a 1-2 game window it's mostly noise.
+5. **Phase 7b (per-QB starter EPA in the model)** — already documented
+   above; the "QB adjustment" idea. Remains the highest-prior untested
+   model change overall.

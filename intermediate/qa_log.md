@@ -648,3 +648,23 @@ weak pull home, then render at settled positions with gray connector
 lines. Verified: min label separation ~doubles while labels stay
 tethered to their dots.
 
+---
+
+**Q: [User pasted post-game box-score analyses — SF@LA and DET@BUF —
+noting turnovers, red zone, and especially trailing pressure ("weakness
+exposed last week gets exploited again") as things SRS/market missed.
+Wants to explore in the future.]**
+
+A: Recorded as an **exploration backlog in `plan.md`**, framed as
+testable hypotheses with honest priors, ranked: (1) short-window
+trailing pressure rate 1-2 games (MEDIUM-HIGH — protection breakdowns
+cluster; distinct from the season-trailing pressure already in the
+blend), (2) recency-weighted SRS (MEDIUM — the umbrella version),
+(3) trailing turnover margin (LOW — turnovers barely autocorrelate;
+classic post-hoc trap), (4) recent red-zone TD rate (LOW-MEDIUM —
+small-sample noise), (5) Phase 7b per-QB starter EPA (already the
+highest-prior model change). Meta-caution recorded with them: ideas
+born from "what explained this game" must earn "predicts the next one"
+through the standard loop — honest backtest first, MODEL_VERSION bump
+and live log only if it wins.
+
