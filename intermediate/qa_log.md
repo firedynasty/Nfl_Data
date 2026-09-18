@@ -577,3 +577,21 @@ week-1 +0.45). Justification already in the log: the opener backtests
 found a returning QB's own prior-season EPA was the best week-1
 predictor tested.
 
+---
+
+**Q: Add catch% too? And where would a QB composite (EPA + catch%) plug
+into the MODEL in a future session?**
+
+A: Catch% **built** (completions / pass attempts, `build_qb_csv.py`'s
+definition = the chart's y-axis), displayed as "J.Goff (+0.10, 63%)".
+Caught a real bug while building it: the 0.7 shrink can't apply to a
+percentage — shrinking catch% toward 0 turns 65% into 45%. Both stats
+now regress **toward the league mean** instead (`lg + 0.7·(v − lg)`,
+league means computed from the prior season); verified J.Goff ~63%,
+J.Allen ~62% vs. chart's ~65%/61%. For the model question: wrote a
+**Phase 7b pointer section in `plan.md`** — the per-QB machinery now
+exists as display code (`cached_qb_epa_asof` + `to_pbp_name`); a future
+session lifts it into `backtest_blend.py` keyed by listed starters,
+adds `qb_epa_diff`/`qb_catch_diff` to FEATURES, re-runs the honest
+backtest, and only if it wins: bump MODEL_VERSION, log, grade.
+

@@ -107,7 +107,9 @@ def cached_srs_ratings(season: int):
 
 # QB EPA blend constants, same placeholder status as SRS's k/shrink:
 # QB_K_PSEUDO_DB = prior season's strength in pseudo-dropbacks (~4-5 games
-# worth), QB_SHRINK = year-over-year regression (new team/scheme/aging).
+# worth), QB_SHRINK = year-over-year regression TOWARD THE LEAGUE MEAN
+# (new team/scheme/aging). Mean-regression matters: catch% shrunk toward
+# 0 turns a 65% QB into 45%, which is nonsense -- toward the mean instead.
 QB_K_PSEUDO_DB = 150.0
 QB_SHRINK = 0.7
 
@@ -126,72 +128,95 @@ def cached_qb_epa_asof(season: int) -> pd.DataFrame:
         pbp = load_pbp(season)
         db = pbp[(pbp["qb_dropback"] == 1) & pbp["passer_player_name"].notna()]
         per = db.groupby(["passer_player_name", "week"]).agg(
-            epa=("epa", "sum"), n=("epa", "count")).reset_index()
+            epa=("epa", "sum"), n=("epa", "count"),
+            comp=("complete_pass", "sum"), att=("pass_attempt", "sum")).reset_index()
         frames = []
         for qb, grp in per.groupby("passer_player_name"):
             grp = grp.set_index("week").reindex(range(1, 23), fill_value=0)
-            grp["epa_cum"] = grp["epa"].cumsum().shift(1).fillna(0)  # through prior weeks
-            grp["db_cum"] = grp["n"].cumsum().shift(1).fillna(0)
+            for col in ("epa", "n", "comp", "att"):
+                grp[f"{col}_cum"] = grp[col].cumsum().shift(1).fillna(0)  # through prior weeks
             grp["passer_player_name"] = qb
             grp["week"] = grp.index
             frames.append(grp.reset_index(drop=True))
         cur = pd.concat(frames, ignore_index=True)
         del pbp
     except Exception:
-        cur = pd.DataFrame(columns=["week", "passer_player_name", "epa_cum", "db_cum"])
+        cur = pd.DataFrame(columns=["week", "passer_player_name", "epa_cum", "db_cum",
+                                    "comp_cum", "att_cum"])
+        cur = cur.rename(columns={"db_cum": "n_cum"})
 
-    prior = {}
+    prior_epa, prior_catch = {}, {}
     try:
         pbp_prev = load_pbp(season - 1)
         db_prev = pbp_prev[(pbp_prev["qb_dropback"] == 1)
                            & pbp_prev["passer_player_name"].notna()]
-        tot = db_prev.groupby("passer_player_name")["epa"].agg(["sum", "count"])
-        prior = (tot["sum"] / tot["count"]).to_dict()
+        tot = db_prev.groupby("passer_player_name").agg(
+            epa_sum=("epa", "sum"), n=("epa", "count"),
+            comp=("complete_pass", "sum"), att=("pass_attempt", "sum"))
+        lg_epa = tot["epa_sum"].sum() / tot["n"].sum()
+        lg_catch = tot["comp"].sum() / tot["att"].sum()
+        # regress priors toward the LEAGUE MEAN, not toward 0
+        prior_epa = {qb: lg_epa + QB_SHRINK * (v - lg_epa)
+                     for qb, v in (tot["epa_sum"] / tot["n"]).items()}
+        prior_catch = {qb: lg_catch + QB_SHRINK * (v - lg_catch)
+                       for qb, v in (tot["comp"] / tot["att"]).items()}
         del pbp_prev
     except Exception:
         pass  # no prior season available -> current-only for everyone
 
-    cur["cur_epa_db"] = cur["epa_cum"] / cur["db_cum"].where(cur["db_cum"] > 0)
-    cur["prior_epa_db"] = cur["passer_player_name"].map(prior)
-    w = cur["db_cum"] / (cur["db_cum"] + QB_K_PSEUDO_DB)
+    cur["cur_epa_db"] = cur["epa_cum"] / cur["n_cum"].where(cur["n_cum"] > 0)
+    cur["cur_catch"] = cur["comp_cum"] / cur["att_cum"].where(cur["att_cum"] > 0)
+    cur["prior_epa_db"] = cur["passer_player_name"].map(prior_epa)
+    cur["prior_catch"] = cur["passer_player_name"].map(prior_catch)
+    w = cur["n_cum"] / (cur["n_cum"] + QB_K_PSEUDO_DB)
     # fill cur with 0 before multiplying: w is 0 exactly when cur is NaN,
     # but 0 * NaN = NaN would poison the blend (week 1 = pure prior)
-    blended = w * cur["cur_epa_db"].fillna(0) + (1 - w) * QB_SHRINK * cur["prior_epa_db"]
-    cur["epa_db"] = blended.fillna(cur["cur_epa_db"])  # rookies: current-only
+    blended_epa = w * cur["cur_epa_db"].fillna(0) + (1 - w) * cur["prior_epa_db"]
+    blended_catch = w * cur["cur_catch"].fillna(0) + (1 - w) * cur["prior_catch"]
+    cur["epa_db"] = blended_epa.fillna(cur["cur_epa_db"])    # rookies: current-only
+    cur["catch_pct"] = blended_catch.fillna(cur["cur_catch"])
 
     # QBs with a prior season but no dropbacks yet THIS season (injured
     # starters, mid-season takeovers): still show the regressed prior.
     have_cur = set(cur["passer_player_name"])
-    prior_only = [qb for qb in prior if qb not in have_cur]
+    prior_only = [qb for qb in prior_epa if qb not in have_cur]
     if prior_only:
         extra = pd.DataFrame({
             "week": [w_ for _ in prior_only for w_ in range(1, 23)],
             "passer_player_name": [qb for qb in prior_only for _ in range(1, 23)],
-            "epa_db": [QB_SHRINK * prior[qb] for qb in prior_only for _ in range(1, 23)],
-            "db_cum": 0,
+            "epa_db": [prior_epa[qb] for qb in prior_only for _ in range(1, 23)],
+            "catch_pct": [prior_catch[qb] for qb in prior_only for _ in range(1, 23)],
+            "n_cum": 0,
         })
         cur = pd.concat([cur, extra], ignore_index=True)
-    return cur[["week", "passer_player_name", "epa_db", "db_cum"]]
+    return cur[["week", "passer_player_name", "epa_db", "catch_pct", "n_cum"]]
 
 
 def qb_lookup(qb_df, week, full_name):
-    """(abbreviated name, epa_db or None) for one game's listed starter.
-    None epa_db means genuinely no data (rookie with no dropbacks yet)."""
+    """(abbreviated name, epa_db or None, catch_pct or None) for one game's
+    listed starter. None epa_db means genuinely no data (rookie with no
+    dropbacks yet)."""
     abbr = to_pbp_name(full_name)
     if abbr is None:
-        return None, None
+        return None, None, None
     row = qb_df[(qb_df["week"] == week) & (qb_df["passer_player_name"] == abbr)]
     if row.empty or pd.isna(row["epa_db"].iloc[0]):
-        return abbr, None
-    return abbr, row["epa_db"].iloc[0]
+        return abbr, None, None
+    catch = row["catch_pct"].iloc[0] if "catch_pct" in row.columns else None
+    return abbr, row["epa_db"].iloc[0], (None if pd.isna(catch) else catch)
 
 
 def qb_label(qb_df, week, full_name):
-    """'J.Goff (+0.05)' style label; just the name if no trailing data."""
-    abbr, epa_db = qb_lookup(qb_df, week, full_name)
+    """'J.Goff (+0.05, 68%)' style label; just the name if no trailing data."""
+    abbr, epa_db, catch_pct = qb_lookup(qb_df, week, full_name)
     if abbr is None:
         return None
-    return abbr + (f" ({epa_db:+.2f})" if epa_db is not None else "")
+    if epa_db is None:
+        return abbr
+    inner = f"{epa_db:+.2f}"
+    if catch_pct is not None:
+        inner += f", {100 * catch_pct:.0f}%"
+    return f"{abbr} ({inner})"
 
 
 def current_season_and_week(games: pd.DataFrame) -> tuple[int, int]:

@@ -283,3 +283,27 @@ expanding-window OLS, team-level EPA. Blend adds +0.5pt win accuracy
 (64.1%) but ATS still below breakeven everywhere; neither model finds
 spread value vs the market. Full numbers + untried levers in
 `intermediate/qa_log.md`.
+
+## Phase 7b (future) — per-QB composite in the model
+
+**Pointer for a future session** (how to add QB EPA/catch% to the model
+itself, not just the display):
+
+- The per-QB machinery is ALREADY BUILT as display code:
+  `cached_qb_epa_asof()` in `streamlit_scoreboard.py` (trailing EPA/db +
+  catch% per QB, prior-season cold-start blend, mean-regressed) and
+  `to_pbp_name()` in `predict_week.py` (bridges games.csv's listed
+  starters `home_qb_name`/`away_qb_name` to pbp passer names).
+- To model it: lift that builder into `backtest_blend.py` next to
+  `trailing_features` (the TEAM-level version), keyed by each game's
+  listed starter; add `qb_epa_diff` / `qb_catch_diff` to `FEATURES`;
+  re-run the expanding-window backtest and compare M2 vs M1 vs M0 on
+  identical games.
+- If it wins: bump `MODEL_VERSION` in `predict_week.py`, integrate,
+  `--log` live, and `grade_predictions.py` compares versions on shared
+  weeks. That comparison is the only verdict that counts.
+- Honest expectation: Phase 7's team-level EPA barely moved the needle
+  (+0.5pt win acc, no ATS value) — but per-QB starter detection
+  (injuries/benchings) is the untested variant with the better prior:
+  the opener backtests found a returning QB's *own* EPA was the best
+  week-1 signal tested, and catch% added on top of it there.
