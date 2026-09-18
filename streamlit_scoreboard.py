@@ -319,11 +319,12 @@ def main():
                 right = ""
                 if final:
                     correct = (game.home_score > game.away_score) == (p["pred_winner"] == game.home_team)
-                    right = f" · {'✓ right' if correct else '✗ wrong'}"
-                st.caption(
-                    f"🔮 SRS {game.away_team} {p['away_srs']:+.1f} @ {game.home_team} "
-                    f"{p['home_srs']:+.1f} · model {model_line} · market {market_line} · "
-                    f"pred {p['pred_winner']} {win_pct:.0f}%{right}"
+                    right = f" · **{'✓ right' if correct else '✗ wrong'}**"
+                st.markdown(
+                    f"🔮 SRS {game.away_team} **{p['away_srs']:+.1f}** @ "
+                    f"{game.home_team} **{p['home_srs']:+.1f}** · "
+                    f"model **{model_line}** · market **{market_line}** · "
+                    f"pred **{p['pred_winner']}** {win_pct:.0f}%{right}"
                 )
 
             if final:
