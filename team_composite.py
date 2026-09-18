@@ -3,7 +3,11 @@ Game Performance Score: one number per team summarizing how well the offense
 moves the ball and protects its QB.
 
 Components (season totals, then percentile-ranked across the 32 teams):
-  + win percentage            (ties count as half a win; more = better)
+  + SRS                       (opponent-adjusted rating in points -- the
+                               schedule correction the other stats lack;
+                               more = better)
+  + QB EPA per dropback       (Expected Points Added on pass/sack/scramble
+                                plays; higher = better)
   + turnover margin per game  (takeaways - giveaways; more = better)
   + first downs per game      (more = better)
   + yards per play            (higher = better)
@@ -44,16 +48,36 @@ from nfl_box_score_analysis import (
     team_rushing_by_team_game,
     turnover_margin_by_team_game,
 )
+from srs import blended_asof_ratings, solve_srs
+
+
+def composite_srs(games, seasons):
+    """SRS per team for the composite. Completed seasons: one solve over
+    all played games in the window (the PFR-validated method). Latest
+    season still in progress: cold-start-blended as-of ratings at the
+    first unplayed week, so a 2-game September isn't raw noise."""
+    seasons = sorted(seasons)
+    latest = seasons[-1]
+    g_latest = games[games["season"].astype(int) == latest]
+    if g_latest["home_score"].isna().any():
+        week = int(g_latest[g_latest["home_score"].isna()]["week"].min())
+        return blended_asof_ratings(games, [latest])[(latest, week)]
+    long = build_long_results(games, list(seasons))
+    m = long[["team", "opp"]].copy()
+    m["margin"] = long["team_score"] - long["opp_score"]
+    rating, _ = solve_srs(m)
+    return rating
 
 # Weights for each component (must sum to 1.0). Edit to taste.
 WEIGHTS = {
-    "win_pct": 0.20,
-    "to_margin_pg": 0.15,
-    "first_downs_pg": 0.13,
-    "yards_per_play": 0.13,
-    "rush_yds_per_att": 0.13,
-    "rz_td_pct": 0.13,
-    "pressure_rate": 0.13,  # flipped below: less pressure = higher score
+    "srs": 0.18,  # opponent-adjusted; sits in win_pct's old seat (SRS supersedes it)
+    "epa_per_dropback": 0.17,
+    "to_margin_pg": 0.13,
+    "first_downs_pg": 0.10,
+    "yards_per_play": 0.10,
+    "rush_yds_per_att": 0.12,
+    "rz_td_pct": 0.11,
+    "pressure_rate": 0.09,  # flipped below: less pressure = higher score
 }
 
 
@@ -65,6 +89,18 @@ def pressure_allowed_by_team_game(pbp):
     return db.groupby(["game_id", "posteam"]).agg(
         dropbacks=("pressured", "count"),
         pressured=("pressured", "sum"),
+    ).reset_index()
+
+
+def qb_epa_by_team_game(pbp):
+    """Total EPA on dropbacks (pass attempts, sacks, scrambles) per team-game.
+    The `team` side is the team whose QB dropped back. Divided by dropbacks
+    (already collected by pressure_allowed_by_team_game) at the season-table
+    step to get EPA/dropback -- a play-value stat, unlike aDOT/catch% which
+    only describe throwing *style*."""
+    db = pbp[pbp["qb_dropback"] == 1]
+    return db.groupby(["game_id", "posteam"]).agg(
+        total_epa=("epa", "sum"),
     ).reset_index()
 
 
@@ -81,6 +117,7 @@ def team_game_stats(seasons):
         redzone_by_team_game(pbp)[["game_id", "posteam", "rz_trips", "rz_td"]],
         team_rushing_by_team_game(pbp).drop(columns=["yds_per_attempt"]),
         pressure_allowed_by_team_game(pbp),
+        qb_epa_by_team_game(pbp),
     ):
         df = df.merge(stats, left_on=["game_id", "team"], right_on=["game_id", "posteam"], how="left")
         df = df.drop(columns=["posteam"])
@@ -110,6 +147,7 @@ def team_season_table(team_game):
         dropbacks=("dropbacks", "sum"),
         pressured=("pressured", "sum"),
         to_margin=("turnover_margin", "sum"),
+        total_epa=("total_epa", "sum"),
     ).reset_index()
 
     t["win_pct"] = (t["wins"] + 0.5 * t["ties"]) / t["games"]
@@ -120,6 +158,7 @@ def team_season_table(team_game):
     # Teams with zero RZ trips get the league-average TD rate (neutral), not NaN
     t["rz_td_pct"] = (t["rz_td"] / t["rz_trips"]).fillna(t["rz_td"].sum() / t["rz_trips"].sum())
     t["pressure_rate"] = t["pressured"] / t["dropbacks"]
+    t["epa_per_dropback"] = t["total_epa"] / t["dropbacks"]
     return t
 
 
@@ -147,13 +186,15 @@ def validate_against_results(team_game, seasons):
         g["rz_td"].sum() / g["rz_trips"].sum()
     )
     g["pressure_rate"] = g["pressured"] / g["dropbacks"]
+    g["epa_per_dropback"] = g["total_epa"] / g["dropbacks"]
     g["margin"] = g["team_score"] - g["opp_score"]
 
     score = 0
     # win_pct is skipped here: at the single-game level it *is* the result,
-    # so including it would make this check circular. Validate the stat
+    # so including it would make this check circular. SRS gets the same
+    # exclusion (it's built from scoring margin). Validate the stat
     # components only, renormalized to sum to 1.
-    stat_weights = {c: w for c, w in WEIGHTS.items() if c != "win_pct"}
+    stat_weights = {c: w for c, w in WEIGHTS.items() if c not in ("win_pct", "srs")}
     total_w = sum(stat_weights.values())
     for col, w in stat_weights.items():
         pct = g[col].rank(pct=True)
@@ -166,8 +207,9 @@ def validate_against_results(team_game, seasons):
     print("\n--- Validation (game-level score vs. results, stat components only) ---")
     print(f"Correlation with scoring margin: {corr:.2f}")
     print(f"Avg score in wins: {by_result.get('W')}  |  in losses: {by_result.get('L')}")
-    print("(win% excluded here -- at game level it IS the result, so including")
-    print("it would be circular; expect positive correlation and wins above losses)")
+    print("(win%/SRS excluded here -- win% IS the result at game level and SRS")
+    print("is built from margin, so including them would be circular; expect")
+    print("positive correlation and wins above losses)")
 
 
 def main():
@@ -182,15 +224,16 @@ def main():
         sys.exit(f"WEIGHTS must sum to 1.0, got {sum(WEIGHTS.values())}")
 
     team_game = team_game_stats(args.seasons)
-    t = add_game_performance_score(team_season_table(team_game))
+    t = team_season_table(team_game)
+    t["srs"] = t["team"].map(composite_srs(load_games(), args.seasons))
+    t = add_game_performance_score(t)
 
-    cols = ["team", "games", "game_performance_score", "win_pct", "to_margin_pg",
-            "first_downs_pg", "yards_per_play", "rush_yds_per_att",
+    cols = ["team", "games", "game_performance_score", "srs", "epa_per_dropback",
+            "to_margin_pg", "first_downs_pg", "yards_per_play", "rush_yds_per_att",
             "rz_td_pct", "pressure_rate"]
     show = t[cols].copy()
-    for c in ["first_downs_pg", "yards_per_play", "rush_yds_per_att", "to_margin_pg"]:
+    for c in ["srs", "epa_per_dropback", "first_downs_pg", "yards_per_play", "rush_yds_per_att", "to_margin_pg"]:
         show[c] = show[c].round(2)
-    show["win_pct"] = (show["win_pct"] * 100).round(1)
     show["rz_td_pct"] = (show["rz_td_pct"] * 100).round(1)
     show["pressure_rate"] = (show["pressure_rate"] * 100).round(1)
     print(f"\n=== Game Performance Score — season(s): {args.seasons} ===")

@@ -358,20 +358,24 @@ print(hits_sacks)
 ### Game Performance Score (composite)
 - **Script:** `team_composite.py` (standalone; reuses the builders above)
 - **Logic:** aggregates eight components to season totals per team —
-  win percentage (ties = half a win), **QB EPA per dropback** (see below),
-  turnover margin/game (takeaways − giveaways, from
-  `turnover_margin_by_team_game`; higher = better, no flip needed since
-  giveaways are already subtracted inside the margin), first downs/game,
-  yards per play, rush yards/attempt, RZ TD rate, and pressure allowed rate
-  (`(qb_hit | sack) / dropbacks`, from the dropback side, so it's pressure
-  the QB's own line gave up). Each component is **percentile-ranked across
-  the 32 teams** (0–100, "better than X% of the league"), the pressure
-  component is flipped (less = better), and the weighted average is the
-  **Game Performance Score** (0–100). Percentiles instead of z-scores so one
-  outlier team can't skew the scale. Weights are an editable `WEIGHTS` dict
-  at the top of the script (default: win% .18, EPA/dropback .17, turnover
-  margin .13, first downs/yards-per-play .10 each, rush yds/att .12, RZ TD
-  .11, pressure rate .09).
+  **SRS** (opponent-adjusted rating in points, from `srs.py` via
+  `composite_srs()`; completed seasons = full-window solve, in-progress
+  season = cold-start-blended as-of ratings — the schedule correction
+  the other components lack; replaced win% in Sep 2026), **QB EPA per
+  dropback** (see below), turnover margin/game (takeaways − giveaways,
+  from `turnover_margin_by_team_game`; higher = better, no flip needed
+  since giveaways are already subtracted inside the margin), first
+  downs/game, yards per play, rush yards/attempt, RZ TD rate, and
+  pressure allowed rate (`(qb_hit | sack) / dropbacks`, from the dropback
+  side, so it's pressure the QB's own line gave up). Each component is
+  **percentile-ranked across the 32 teams** (0–100, "better than X% of
+  the league"), the pressure component is flipped (less = better), and
+  the weighted average is the **Game Performance Score** (0–100).
+  Percentiles instead of z-scores so one outlier team can't skew the
+  scale. Weights are an editable `WEIGHTS` dict at the top of the
+  script (default: SRS .18, EPA/dropback .17, turnover margin .13,
+  first downs/yards-per-play .10 each, rush yds/att .12, RZ TD .11,
+  pressure rate .09).
 - **QB EPA per dropback (added Sep 2026):**
   - **Builder:** `qb_epa_by_team_game(pbp)`, local to `team_composite.py`
     (same as `pressure_allowed_by_team_game` — composite-specific builders
@@ -391,10 +395,11 @@ print(hits_sacks)
     **0.615 → 0.661** — a real gain, not week-1 noise (a quick single-week
     2026 check showed 0.56 → 0.67, but that's only 32 games and too small
     to trust on its own).
-- **Validation caveat:** the game-level validation score excludes win% —
-  at single-game level win% *is* the result, so including it would make
-  the winners-vs-losers check circular. Only the stat components are
-  validated there (renormalized to sum to 1).
+- **Validation caveat:** the game-level validation score excludes win%
+  and SRS — at single-game level win% *is* the result and SRS is built
+  from margin, so including either would make the winners-vs-losers
+  check circular. Only the stat components are validated there
+  (renormalized to sum to 1).
 - **NaN handling:** a team with zero red-zone trips gets the league-average
   RZ TD rate (neutral), so early-season samples don't produce NaN scores.
 - **CLI:** `python team_composite.py --seasons 2026`

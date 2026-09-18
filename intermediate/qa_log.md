@@ -595,3 +595,27 @@ session lifts it into `backtest_blend.py` keyed by listed starters,
 adds `qb_epa_diff`/`qb_catch_diff` to FEATURES, re-runs the honest
 backtest, and only if it wins: bump MODEL_VERSION, log, grade.
 
+---
+
+**Q: Can the Game Performance Score include SRS? Plus app polish: team
+color badges instead of logos, and a team-jump button grid.**
+
+A: All three **built** (user said make the changes per recommendation).
+(1) **SRS replaced win%** in the composite (its old 0.18 seat — SRS
+supersedes binary W/L: it contains winning + margin + schedule
+adjustment, the one thing the composite lacked). Completed seasons use
+the full-window solve; in-progress season uses cold-start-blended as-of
+ratings (`composite_srs()`). SRS is excluded from game-level validation
+for the same circularity reason win% was. Sanity-ran 2023-2025 and
+2026 paths, both healthy (numbers intentionally not shown per request).
+(2) Score-row logos replaced with `team_colors.py` badge chips (tight
+inline-flex spans per the user's spec; LA→LAR alias handled).
+(3) Team-jump nav grid: 32 color-coded `st.button`s (CSS scoped via
+`st-key-btn_*` classes) above the cards; click sets
+`selected_team`/`view_by`/`team_filter` via on_click callback (legal
+pre-run state writes) and lands on that team's Team view. AppTest
+verified badges render and a BUF click switches views; note AppTest
+itself can't serialize keyed segmented_controls (harness-only quirk,
+browsers fine). Commit includes the previously-uncommitted EPA-session
+changes in team_composite.py (user-approved).
+

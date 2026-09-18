@@ -36,6 +36,7 @@ from predict_week import (
     MARGIN_STD,
 )
 from srs import blended_asof_ratings
+from team_colors import BADGE_CSS, TEAM_ORDER, badge_html, nav_button_css
 
 LOGOS_URL = "https://raw.githubusercontent.com/nflverse/nfldata/master/data/logos.csv"
 TEAMS_URL = "https://raw.githubusercontent.com/nflverse/nfldata/master/data/teams.csv"
@@ -45,17 +46,12 @@ st.markdown(
     '<style>section[data-testid="stSidebar"] { width: 220px !important; }</style>',
     unsafe_allow_html=True,
 )
+st.markdown(BADGE_CSS, unsafe_allow_html=True)
 
 
 @st.cache_data(show_spinner=False)
 def cached_games():
     return load_games()
-
-
-@st.cache_data(show_spinner=False)
-def cached_logos() -> dict[str, str]:
-    logos = pd.read_csv(LOGOS_URL)
-    return dict(zip(logos["team"], logos["team_logo"]))
 
 
 @st.cache_data(show_spinner=False)
@@ -272,12 +268,19 @@ def stats_table(game_stats: pd.DataFrame, game_id: str, away: str, home: str, aw
     return pd.DataFrame(rows).T
 
 
+def _jump_to_team(abbr):
+    """Nav grid click: switch to Team view pre-filtered to this team.
+    Runs pre-script (on_click), so widget-state writes are legal."""
+    st.session_state["selected_team"] = abbr
+    st.session_state["view_by"] = "Team"
+    st.session_state["team_filter"] = abbr
+
+
 def main():
     st.title("🏈 NFL Scoreboard")
     st.caption("Score, then the box-score stats right underneath: plays/yards/yards-per-play, turnover margin, red zone conversion.")
 
     games = cached_games()
-    logos = cached_logos()
     names = cached_team_names()
     default_season, default_week = current_season_and_week(games)
 
@@ -286,7 +289,8 @@ def main():
         seasons_available = sorted(games["season"].unique(), reverse=True)
         season = st.selectbox("Season", seasons_available, index=seasons_available.index(default_season))
 
-        view_by = st.segmented_control("View by", ["Week", "Team", "Predictions"], default="Week")
+        view_by = st.segmented_control("View by", ["Week", "Team", "Predictions"],
+                                       default="Week", key="view_by")
 
         season_games = games[games["season"] == season]
         # Predictions needs only final scores (SRS) -- skip the heavy pbp load
@@ -303,6 +307,7 @@ def main():
                 "Team", teams_available,
                 index=teams_available.index(default_team),
                 format_func=lambda t: names.get(t, t),
+                key="team_filter",
             )
         else:
             weeks_available = sorted(season_games["week"].unique())
@@ -393,6 +398,17 @@ def main():
         shown_games = season_games[season_games["week"] == week].copy()
         st.caption(f"Season {season}, Week {week} — {len(shown_games)} games")
 
+    # Team jump grid: one colored button per team, no scrolling needed
+    st.markdown("---")
+    nav_cols = st.columns(8)
+    for i, abbr in enumerate(TEAM_ORDER):
+        nav_cols[i % 8].button(abbr, key=f"btn_{abbr}", on_click=_jump_to_team, args=(abbr,))
+    st.markdown(nav_button_css(), unsafe_allow_html=True)
+    sel = st.session_state.get("selected_team")
+    st.caption(f"Selected team: **{sel}** (showing its games below)"
+               if sel else "Tap a team to jump straight to its games.")
+    st.markdown("---")
+
     shown_games["gameday"] = pd.to_datetime(shown_games["gameday"])
     shown_games = shown_games.sort_values(["week", "gameday", "gametime"])
 
@@ -430,10 +446,8 @@ def main():
                 (game.away_team, away_label, game.away_score, away_win),
                 (game.home_team, home_label, game.home_score, home_win),
             ):
-                logo_col, name_col, score_col = st.columns([1, 6, 1])
-                logo_url = logos.get(team)
-                if logo_url:
-                    logo_col.image(logo_url, width=32)
+                badge_col, name_col, score_col = st.columns([1, 6, 1])
+                badge_col.markdown(badge_html(team), unsafe_allow_html=True)
                 qb_str = ""
                 if qb_df is not None:
                     full_qb = game.away_qb_name if team == game.away_team else game.home_qb_name
