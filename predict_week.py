@@ -48,6 +48,20 @@ LOG_PATH = "predictions_log.csv"
 
 TEAMS_URL = "https://raw.githubusercontent.com/nflverse/nfldata/master/data/teams.csv"
 
+QB_SUFFIXES = {"II", "III", "IV", "Jr.", "Sr.", "Jr", "Sr."}
+
+
+def to_pbp_name(full):
+    """'Jared Goff' -> 'J.Goff' (nflverse play-by-play passer style).
+    Used both for display and for joining games.csv QB names to pbp
+    passer stats. Returns None for missing names."""
+    if not isinstance(full, str) or not full.strip():
+        return None
+    parts = full.split()
+    if parts[-1] in QB_SUFFIXES:
+        parts = parts[:-1]
+    return f"{parts[0][0]}.{parts[-1]}"
+
 
 def team_nicknames():
     """abbr -> nickname (SF -> 49ers) for readable final scores;
@@ -103,6 +117,8 @@ def detail_for_games(sched, ratings):
             "spread_line": spread,
             "edge": round(margin - spread, 3) if spread is not None else None,
             "pred_winner": g.home_team if pred_home else g.away_team,
+            "away_qb": getattr(g, "away_qb_name", None),
+            "home_qb": getattr(g, "home_qb_name", None),
             "away_score": g.away_score if played else None,
             "home_score": g.home_score if played else None,
             "already_played": played,
@@ -126,6 +142,8 @@ def build_week_table(games, season, week, ratings, k, shrink, names=None):
         row = {
             "day": d.gameday.strftime("%a %b %-d"),
             "game": f"{d.away} @ {d.home}" + (" (neutral)" if d.neutral else ""),
+            "away_qb": to_pbp_name(d.away_qb) or "-",
+            "home_qb": to_pbp_name(d.home_qb) or "-",
             "away_srs": round(d.away_srs, 1),
             "home_srs": round(d.home_srs, 1),
             "model_line": line_string(d.home, d.away, d.pred_margin),

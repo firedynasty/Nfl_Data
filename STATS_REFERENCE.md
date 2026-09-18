@@ -456,6 +456,13 @@ print(hits_sacks)
     `normal_cdf(pred_margin / 13.44)` (std from the same backtest).
   - `final` — `score(nickname)-score(nickname)`, away-home.
   - `pred_right` — ✓ if the predicted winner actually won.
+  - `away_qb` / `home_qb` — listed starter (games.csv `*_qb_name`,
+    bridged to pbp style via `to_pbp_name`: "Jared Goff" → "J.Goff")
+    and, in the app, his **EPA/dropback through prior weeks**
+    (`cached_qb_epa_asof` in streamlit_scoreboard.py: trailing per-QB
+    sums, reindexed over bye weeks — same number as the QB chart's
+    x-axis). **Context display only — not in the model** (srs-v1
+    unchanged), so the live log and grading are unaffected.
 - **Live log (Phase 6):** `--log` appends unplayed games to
   `predictions_log.csv` (refuses played games and duplicates);
   `grade_predictions.py` grades the log per `model_version` (win acc,

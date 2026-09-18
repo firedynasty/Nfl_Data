@@ -27,7 +27,14 @@ from nfl_box_score_analysis import (
     team_rushing_by_team_game,
     turnover_margin_by_team_game,
 )
-from predict_week import build_week_table, detail_for_games, line_string, HFA_POINTS, MARGIN_STD
+from predict_week import (
+    build_week_table,
+    detail_for_games,
+    line_string,
+    to_pbp_name,
+    HFA_POINTS,
+    MARGIN_STD,
+)
 from srs import blended_asof_ratings
 
 LOGOS_URL = "https://raw.githubusercontent.com/nflverse/nfldata/master/data/logos.csv"
@@ -96,6 +103,49 @@ def cached_srs_ratings(season: int):
     """No-leakage blended SRS per week for one season. Scores-only (no pbp),
     so this is fast; ttl lets newly played games flow into the ratings."""
     return blended_asof_ratings(cached_games(), [season])
+
+
+@st.cache_data(show_spinner="Loading QB stats for this season...")
+def cached_qb_epa_asof(season: int) -> pd.DataFrame:
+    """Per (week, QB): EPA/dropback through PRIOR weeks of the season
+    (trailing -- so a week-2 game shows week-1 numbers, matching the QB
+    EPA/catch% chart's x-axis). CONTEXT DISPLAY ONLY: not part of the
+    prediction model (srs-v1 stays pure SRS), so logs/grading are
+    unaffected."""
+    pbp = load_pbp(season)
+    db = pbp[(pbp["qb_dropback"] == 1) & pbp["passer_player_name"].notna()]
+    per = db.groupby(["passer_player_name", "week"]).agg(
+        epa=("epa", "sum"), n=("epa", "count")).reset_index()
+    frames = []
+    for qb, grp in per.groupby("passer_player_name"):
+        grp = grp.set_index("week").reindex(range(1, 23), fill_value=0)
+        grp["epa_cum"] = grp["epa"].cumsum().shift(1).fillna(0)  # through prior weeks
+        grp["db_cum"] = grp["n"].cumsum().shift(1).fillna(0)
+        grp["passer_player_name"] = qb
+        grp["week"] = grp.index
+        frames.append(grp.reset_index(drop=True))
+    out = pd.concat(frames, ignore_index=True)
+    out["epa_db"] = out["epa_cum"] / out["db_cum"].where(out["db_cum"] > 0)
+    return out[["week", "passer_player_name", "epa_db", "db_cum"]]
+
+
+def qb_lookup(qb_df, week, full_name):
+    """(abbreviated name, epa_db or None) for one game's listed starter."""
+    abbr = to_pbp_name(full_name)
+    if abbr is None:
+        return None, None
+    row = qb_df[(qb_df["week"] == week) & (qb_df["passer_player_name"] == abbr)]
+    if row.empty or row["db_cum"].iloc[0] == 0:
+        return abbr, None  # no prior-week dropbacks yet (e.g. week 1)
+    return abbr, row["epa_db"].iloc[0]
+
+
+def qb_label(qb_df, week, full_name):
+    """'J.Goff (+0.05)' style label; just the name if no trailing data."""
+    abbr, epa_db = qb_lookup(qb_df, week, full_name)
+    if abbr is None:
+        return None
+    return abbr + (f" ({epa_db:+.2f})" if epa_db is not None else "")
 
 
 def current_season_and_week(games: pd.DataFrame) -> tuple[int, int]:
@@ -195,7 +245,8 @@ def main():
             show_preds = st.toggle(
                 "Attach prediction row to games", value=False,
                 help="Adds each game's SRS ratings, model line, market line, and "
-                     "predicted winner right under the score.",
+                     "predicted winner under the score, plus each starting QB's "
+                     "EPA/dropback next to the team name.",
             )
 
         st.divider()
@@ -208,8 +259,13 @@ def main():
 
     if view_by == "Predictions":
         ratings = cached_srs_ratings(season)
-        pred_df, _ = build_week_table(games, season, week, ratings, k=4.0, shrink=0.7,
-                                      names=names)
+        pred_df, detail = build_week_table(games, season, week, ratings, k=4.0, shrink=0.7,
+                                           names=names)
+        qb_df = cached_qb_epa_asof(season)
+        pred_df["away_qb"] = [qb_label(qb_df, d.week, d.away_qb) or "-"
+                              for d in detail.itertuples()]
+        pred_df["home_qb"] = [qb_label(qb_df, d.week, d.home_qb) or "-"
+                              for d in detail.itertuples()]
 
         st.caption(f"Season {season}, Week {week} — {len(pred_df)} games · "
                    f"SRS ratings as of before week {week} (no games from this week or later)")
@@ -248,6 +304,9 @@ def main():
                 "outright** (bigger predicted margin), and its calibrated "
                 "probability (normal curve, 13.4-point error std from the backtest). "
                 "This is about *winning*, never about covering the spread.\n\n"
+                "**away_qb / home_qb** — each team's listed starter and his "
+                "EPA/dropback through prior weeks (same number as the QB "
+                "EPA/catch% chart's x-axis). Context only — NOT part of the model.\n\n"
                 "**final / pred_right** — the actual score, and whether the "
                 "predicted winner actually won."
             )
@@ -266,8 +325,10 @@ def main():
     shown_games = shown_games.sort_values(["week", "gameday", "gametime"])
 
     pred_by_id = None
+    qb_df = None
     if show_preds:
         pred_by_id = detail_for_games(shown_games, cached_srs_ratings(season)).set_index("game_id")
+        qb_df = cached_qb_epa_asof(season)
 
     export_df = game_stats[game_stats["game_id"].isin(shown_games["game_id"])].copy()
     export_df.insert(0, "season", season)
@@ -301,7 +362,13 @@ def main():
                 logo_url = logos.get(team)
                 if logo_url:
                     logo_col.image(logo_url, width=32)
-                name_col.markdown(f"{'**' if won else ''}{label}{'**' if won else ''}")
+                qb_str = ""
+                if qb_df is not None:
+                    full_qb = game.away_qb_name if team == game.away_team else game.home_qb_name
+                    ql = qb_label(qb_df, game.week, full_qb)
+                    if ql:
+                        qb_str = f" · {ql}"
+                name_col.markdown(f"{'**' if won else ''}{label}{'**' if won else ''}{qb_str}")
                 score_text = f"{int(score)}" if pd.notna(score) else "-"
                 score_col.markdown(f"{'**' if won else ''}{score_text}{'**' if won else ''}")
 

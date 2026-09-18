@@ -506,6 +506,23 @@ All app paths re-smoke-tested.
 
 ---
 
+**Q: Add the QB to the predictions (the QB EPA/catch% chart is generated
+in this project too)?**
+
+A: **Built, as display context — explicitly NOT in the model** (srs-v1
+stays pure SRS; log/grading unaffected, no version bump). Name bridge
+`to_pbp_name()` in predict_week.py (games.csv full names → pbp style:
+"Jared Goff" → "J.Goff", suffix-aware). Three surfaces: CLI table gains
+away_qb/home_qb columns; app combine mode shows "Team · J.Goff (+0.02)"
+next to each team name; Predictions table shows "J.Allen (+0.45)". EPA
+is trailing through prior weeks (`cached_qb_epa_asof`, reindexed over
+byes) — verified equal to the QB chart's x-axis (J.Goff +0.02, J.Allen
++0.45, C.Williams +0.45 after week 1). QBs with no prior dropbacks
+(week 1, or not yet played this season) show name only — honest, not
+zero-filled. Explainer + STATS_REFERENCE updated.
+
+---
+
 **Q: Build the Phase 5 walk-forward harness, run on season-total SRS
 (the leaky rough read, build-order step 2).**
 
