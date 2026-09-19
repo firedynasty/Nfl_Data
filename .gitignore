@@ -3,3 +3,7 @@ __pycache__/
 .ipynb_checkpoints/
 output/
 blend_features_cache.csv
+
+# real position data / AI advisor runs -- repo is public, keep dollar amounts local
+my_positions.txt
+systems/kalshi_advisor/kalshi_advisor_log.csv
