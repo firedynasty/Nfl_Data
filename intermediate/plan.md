@@ -284,29 +284,26 @@ expanding-window OLS, team-level EPA. Blend adds +0.5pt win accuracy
 spread value vs the market. Full numbers + untried levers in
 `intermediate/qa_log.md`.
 
-## Phase 7b (future) — per-QB composite in the model
+## Phase 7b — per-QB composite in the model
 
-**Pointer for a future session** (how to add QB EPA/catch% to the model
-itself, not just the display):
+**Status: BUILT and graded (2026-09-18) — does not win.**
+`backtest_blend.py --qb`: `qb_season_asof()` + `qb_starter_features()`
+lift `cached_qb_epa_asof()`'s as-of, cold-start-blended EPA/db + catch%
+math (from display-only in `streamlit_scoreboard.py`) into the model,
+keyed by the listed starter (`home_qb_name`/`away_qb_name` via
+`to_pbp_name()`) instead of by team. M2 = M1 + `qb_epa_diff` +
+`qb_catch_diff`, same expanding-window OLS, 2022-2025 (1,139 games):
+win accuracy **63.8%** (M1: 64.1%, M0: 63.6%), Brier 0.223 (M1: 0.224),
+ATS still **below breakeven in every bucket**, rule ≥4 at 48.7% (M1:
+47.6%). Starter-level QB detail is a wash to a slight loss vs. team-level
+EPA — the market already prices starter/injury information, same
+conclusion the moneyline test reached. No `MODEL_VERSION` bump;
+`predict_week.py` stays on `srs-v1`. Full numbers + interpretation
+(including the catch%/EPA collinearity caveat on the fitted weights) in
+`intermediate/qa_log.md`.
 
-- The per-QB machinery is ALREADY BUILT as display code:
-  `cached_qb_epa_asof()` in `streamlit_scoreboard.py` (trailing EPA/db +
-  catch% per QB, prior-season cold-start blend, mean-regressed) and
-  `to_pbp_name()` in `predict_week.py` (bridges games.csv's listed
-  starters `home_qb_name`/`away_qb_name` to pbp passer names).
-- To model it: lift that builder into `backtest_blend.py` next to
-  `trailing_features` (the TEAM-level version), keyed by each game's
-  listed starter; add `qb_epa_diff` / `qb_catch_diff` to `FEATURES`;
-  re-run the expanding-window backtest and compare M2 vs M1 vs M0 on
-  identical games.
-- If it wins: bump `MODEL_VERSION` in `predict_week.py`, integrate,
-  `--log` live, and `grade_predictions.py` compares versions on shared
-  weeks. That comparison is the only verdict that counts.
-- Honest expectation: Phase 7's team-level EPA barely moved the needle
-  (+0.5pt win acc, no ATS value) — but per-QB starter detection
-  (injuries/benchings) is the untested variant with the better prior:
-  the opener backtests found a returning QB's *own* EPA was the best
-  week-1 signal tested, and catch% added on top of it there.
+This was the highest-prior item on the exploration backlog below — it's
+now closed with a real answer, not a guess.
 
 ## Exploration backlog (from post-game analyses, Sep 2026)
 
@@ -339,6 +336,59 @@ by prior:
 4. **Recent red-zone TD rate** — short-window version of the RZ
    component. Prior: LOW-MEDIUM — red-zone numbers are small-sample
    noisy even at season level; as a 1-2 game window it's mostly noise.
-5. **Phase 7b (per-QB starter EPA in the model)** — already documented
-   above; the "QB adjustment" idea. Remains the highest-prior untested
-   model change overall.
+5. ~~**Phase 7b (per-QB starter EPA in the model)**~~ — **TESTED
+   2026-09-18, did not win** (63.8% vs M1's 64.1%, no ATS value; see
+   above). Was the highest-prior item; closed.
+
+## Segment tests (Sep 2026) — slicing existing results, no new model
+
+No public betting-split/handle data source found (the "fade the public"
+idea from qa_log has no free historical data), so pivoted to what
+`games.csv` already carries but the model ignores.
+
+1. ~~**Divisional games vs non-division**~~ — **TESTED 2026-09-18,
+   no edge.** Win acc is worse in division games (61.8% vs 65.3%, as
+   expected) but ATS is below breakeven in BOTH (48.6% / 47.5%) — the
+   market already prices the extra unpredictability. Closed.
+2. ~~**Rest differential / short week / bye week**~~ — **TESTED
+   2026-09-18, no edge.** Every bucket below breakeven (45-48%).
+   Notable: home-off-bye win accuracy is 72.8% (model's best bucket)
+   but that bucket's ATS is 45.7% — the model being MORE right doesn't
+   help, because the line already reflects it. Closed.
+3. ~~**Totals (over/under) market**~~ — **TESTED 2026-09-18, no edge.**
+   `backtest_totals.py` (Phase 8): trailing points-for/points-against per
+   team, as-of, cold-start blended (shrink toward each team's own
+   prior-season rate, itself pulled toward that season's league average —
+   the general form of the SRS/EPA `shrink * prior` formula for a stat
+   that isn't already zero-centered), weights fit by expanding-window OLS.
+   2021-2025, 1,424 games: cover rate 46.9%-51.3% across |edge| buckets,
+   below breakeven everywhere pooled. Splitting under-only shows one
+   bucket above breakeven (|edge|>=3: 54.8%, ROI +5.6%, n=104) but no
+   monotonic pattern across buckets and a raw predicted-total cutoff table
+   (55/49/52/55/53% under-rate across five bands) shows no usable
+   threshold — reads as noise. "Bad teams -> under" doesn't survive
+   honest as-of testing. Full numbers in `intermediate/qa_log.md`. Closed.
+4. ~~**Weather-conditioned totals** (temp/wind/roof/surface)~~ — **TESTED
+   2026-09-18, mostly nothing + ONE flagged signal.**
+   `backtest_weather.py` (Phase 10): temp bands dead, roof priced,
+   Thursday exactly 50.0%, division 51.9%. BUT wind is the project's
+   first dose-response + era-stable signal: blind under at 11-16 mph is
+   55.5% lifetime (n=945) and 59.1%/60.3% in the last two eras; the
+   market lowers wind totals only ~half as much as scoring drops
+   (fitted wind coef −0.23 pts/mph, market miss −1.4 to −1.6 pts).
+   Flagged as a FORWARD-TEST candidate (blind under, outdoor, wind
+   ≥11 mph), same standing as road_dog at this stage — not a rule
+   until a graded paper trail exists. Full numbers in qa_log.
+   **Forward-test tool BUILT 2026-09-18:**
+   `systems/wind_under/wind_under_system.py` (weekly qualifiers via
+   Open-Meteo stadium forecasts; `--backtest` pooled 55.2% under,
+   ROI +7.0%, above breakeven in all four eras; paper trail 1-0 after
+   week 1). Open question for the trail: does the 16+ mph band stay in
+   the rule (recent-era decay) — qualifiers are band-tagged to decide.
+5. ~~**Pressure as tiebreaker when QBs are even**~~ — **TESTED
+   2026-09-18, no edge.** `backtest_pressure.py` (Phase 9): the literal
+   claim holds (lower-prate team wins 55.2% when |epa_diff|≤0.05) but
+   is NO stronger than unconditional (56.4%) — protection is a general
+   quality marker, not a tiebreaker. When both model and market say the
+   teams are even, it's 49.5% — a coin flip. ATS nowhere robust;
+   dose-response not monotone. Closed.

@@ -1,0 +1,51 @@
+Here's the whole arc of today's session:
+
+1. "I'm testing models" + the Action Network system
+
+You pasted a betting system description (bet bad-last-season teams as small underdogs, low totals, no Thursdays) and its actual picks from Action Network (4–1 run: NE, CHI, TEN, NO, CLE; plus 4 upcoming picks).
+
+What I did: Verified all 5 past picks against your nflverse data — they matched exactly. Then reverse-engineered what the system really does vs. what its description claims:
+- Bets +2.5 to +6.5, not "+1 to +3.5"
+- Totals up to 48.5, not "under 44"
+- All 9 picks are road dogs, all Sundays, all season long
+
+2. Backtesting it
+
+- Built backtest_baddogs.py → the Action Network config grades 47% cover, −9.3% ROI (2021–25). Blind bad-dog betting just pays the vig.
+- When you asked "how many years back do I need to scrape?" — answer: zero. nflverse has lines back to 1999, so I ran the full 2000–2025 backtest instead of you scraping anything.
+- Findings: the AN config used to work (53% in the 2000s) and decayed to 48.6% in the 2020s — the edge got famous and died. Thursday exclusion is their one validated rule (45.3%).
+
+3. The key insight (your phrasing)
+
+You summarized it: "perceived bad teams traveling on the road get bet on because they aren't actually that bad." The data says the precise version is: the spread itself tells you whether they're actually bad.
+- Bad team +6.5 → market agrees they're bad → no edge (~48%)
+- Bad team +1 to +3.5 on the road → market disrespects last year's record → 59.7% cover, +17.4% ROI, n=139, positive in all three eras, robust to threshold wiggles
+
+Then a few rounds of plain-English explaining (8th-grade version, the "experts' homework leaks through the number" idea, why covering ≠ winning, +2.5 vs +6.5 side-by-side).
+
+4. Built the tool: systems/road_dog_system.py
+
+You asked for a runnable script, then iterated on it:
+
+┌──────────────────────────────────────────────────┬─────────────────────────────────────────────────────────────────────────────────────────┐
+│                    You asked                     │                                         I added                                         │
+├──────────────────────────────────────────────────┼─────────────────────────────────────────────────────────────────────────────────────────┤
+│ "a python script I can run"                      │ Weekly qualifier + --backtest mode, auto-detects current week                           │
+├──────────────────────────────────────────────────┼─────────────────────────────────────────────────────────────────────────────────────────┤
+│ "add prediction works + boxscore + over/under    │ Final scores, bet W/L/PUSH grading, total results, season tracker                       │
+│ like the streamlit app"                          │                                                                                         │
+├──────────────────────────────────────────────────┼─────────────────────────────────────────────────────────────────────────────────────────┤
+│ "add a flag --result?"                           │ --results view, one row per bet, graded in units like the Action Network page           │
+├──────────────────────────────────────────────────┼─────────────────────────────────────────────────────────────────────────────────────────┤
+│ "make it more clear, like NE 13 SEA 10"          │ Explicit scores (NE 10 - SEA 13, total 23 (under 44.5)) — which also caught that you'd  │
+│                                                  │ misread the old format: SEA won that game                                               │
+├──────────────────────────────────────────────────┼─────────────────────────────────────────────────────────────────────────────────────────┤
+│ "explain the filter with the script"             │ The 5-rule AND gate at lines 86–104, each rule's purpose + 26-year evidence             │
+└──────────────────────────────────────────────────┴─────────────────────────────────────────────────────────────────────────────────────────┘
+
+Where things stand right now
+
+- Forward test: 1–0 (+0.91u). The system's first-ever qualifier — NYJ +1.5 @ TEN in week 1 — won outright 23–10.
+- This weekend (week 2): 0 qualifiers. Both Action Network picks (LV +6.5, CIN +2.5) fail our filters — LV's spread is too big, CIN wasn't bad enough. That's the system working as designed: ~5–8 bets/season, not 2/week.
+- Your weekly loop: run python3 systems/road_dog_system.py before Sunday → run --results after Monday → the paper trail decides by season's end whether the 26-year edge is real.
+

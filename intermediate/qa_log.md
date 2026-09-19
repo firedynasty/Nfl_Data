@@ -668,3 +668,256 @@ born from "what explained this game" must earn "predicts the next one"
 through the standard loop — honest backtest first, MODEL_VERSION bump
 and live log only if it wins.
 
+---
+
+**Q: Phase 7b — does lifting the per-QB starter EPA/db + catch% builder
+(`cached_qb_epa_asof` in `streamlit_scoreboard.py`, display-only until
+now) into the model actually beat M1's team-level blend?**
+
+A: **Built and graded — it does not win.** `backtest_blend.py --qb`:
+new `qb_season_asof()` + `qb_starter_features()` lift the same as-of,
+cold-start-blended EPA/db and catch% math (k=150 pseudo-dropbacks,
+shrink=0.7 toward league mean) but keyed by the STARTER listed in
+`games.csv` (`home_qb_name`/`away_qb_name`, bridged via `to_pbp_name`)
+instead of by team — the thing that should catch injuries/benchings
+team-level trailing EPA can't. Missing starters (name mismatches, true
+no-data rookies) fall back to that season/week's league average so no
+game is dropped. M2 = M1's four features + `qb_epa_diff` +
+`qb_catch_diff`, same expanding-window OLS discipline (2022-2025 eval,
+1,139 games, breakeven 52.4%):
+
+| Metric | M0 SRS-only | M1 blend | M2 blend + QB starter |
+|---|---|---|---|
+| Win accuracy | 63.6% | 64.1% | **63.8%** |
+| Brier | 0.226 | 0.224 | 0.223 |
+| ATS 0-1 / 1-2 / 2-3 / 3+ | 48.6/47.5/42.3/49.6 | 48.9/51.2/44.9/49.9 | 51.6/49.6/49.5/50.0 |
+| Rule \|edge\|≥4 | 51.0% (n=245) | 47.6% (n=227) | 48.7% (n=232) |
+
+Fitted `qb_epa_diff` is unstable and small (−0.06 in 2022's tiny train
+window, +0.9 to +2.3 once more data accumulates — right sign, weak);
+`qb_catch_diff` is large and positive throughout (+10 to +20) but that's
+suspicious, not exciting: catch% is collinear with EPA/db (accurate
+QBs both complete more and are worth more per dropback) and the
+regression is likely splitting one real signal across two correlated
+columns rather than finding a second one.
+
+**Verdict: starter-level QB detail loses a hair of win accuracy vs. M1
+(63.8% vs 64.1%), nudges Brier down a hair, and still clears breakeven
+in ZERO ats buckets** — same conclusion as every model tried so far
+(M0, M1, M2): the market already prices starter/injury information
+the model is trying to add here, which is exactly the concern flagged
+when 7b was first proposed ("market prices injuries instantly;
+unlikely to help"). This closes the highest-prior item on the
+exploration backlog with a real answer instead of a guess. Remaining
+backlog items (short-window pressure, recency-weighted SRS, turnover
+margin, red-zone rate) are all lower-prior than this one was and share
+the same likely fate, but are still untested.
+
+No `MODEL_VERSION` bump — `predict_week.py` stays on `srs-v1` (M1's
+constants); this was a backtest-only experiment, nothing changed in
+the live pipeline. `cached_qb_epa_asof` in `streamlit_scoreboard.py`
+remains display-only, unaffected by this test.
+
+---
+
+**Q: User couldn't find historical betting-percentage/handle data (the
+"fade the public" idea has no data source), pivoted to what's cheaply
+testable. Any hidden pocket in the "no edge anywhere" conclusion —
+divisional games, rest situations?**
+
+A: **Built and graded — no pocket found.** `backtest_segments.py`: no
+new model, just re-slices M1's already-graded 1,139 games (2022-2025,
+from the cached feature frame) by columns `games.csv` carries but the
+model never uses: `div_game`, `away_rest`/`home_rest`.
+
+- **Divisional games:** win acc 61.8% (n=393) vs 65.3% non-division —
+  division games ARE harder to predict outright, as expected. But ATS:
+  48.6% division vs 47.5% non-division — **both below the 52.4%
+  breakeven, no gap**. The market prices the extra unpredictability
+  into the line just as well as it prices everything else.
+- **Rest differential** (home_rest − away_rest, bucketed ≤−4 / −3..3 /
+  ≥4) and **named situations** (short week ≤6 days, off bye ≥12 days,
+  either side): **every single bucket below breakeven**, 45.0%–47.9%.
+  Notable non-result: home-off-bye win accuracy is 72.8% (n=81, the
+  model correctly predicts these wins far more than its 64% average)
+  but that same bucket's ATS cover is 45.7% — the model gets MORE right
+  about who wins on rest advantages, and it STILL doesn't turn into
+  spread value, because the line already moved to reflect it. This is
+  the cleanest single illustration yet of "market prices what the model
+  knows" — not just true on average, true in the exact subset where the
+  model is most confident.
+
+**Verdict:** two more free checks, same universal conclusion. Explicit
+caution logged in the script itself: this is post-hoc slicing against
+one breakeven line with no multiple-comparisons correction, so treat
+any future bucket that clears it as a re-test candidate, not a rule.
+Remaining backlog, cheapest-to-most-expensive: totals market (highest
+prior — genuinely different market, `total_line`/`over_odds`/
+`under_odds` already in `games.csv`, unused; needs a new small
+points-for/against trailing model since SRS predicts margin, not
+scoring pace), then weather-conditioned totals once that model exists,
+then the original short-window-pressure / recency-weighted-SRS /
+turnover-margin / red-zone-rate items (all lower prior, all untested).
+
+---
+
+**Q: Totals (over/under) market — the highest-prior remaining backlog
+item. User specifically wants to know whether two bad teams trend
+toward the under, and what the cutoff would be.**
+
+A: **Built and graded — no edge, no clean cutoff.** New
+`backtest_totals.py` (Phase 8): trailing points-for/points-against per
+team, as-of (no leakage), cold-start blended toward each team's
+PRIOR-season rate shrunk toward that season's league-average points —
+the general form of the same `shrink * prior` formula SRS/EPA use,
+which only looked like "multiply by shrink" there because their league
+average happens to be ~0; points obviously aren't. Weights fit by
+expanding-window OLS (season S trained only on seasons < S), same
+discipline as Phase 7. No play-by-play needed, so training reaches
+back to 2000 (`total_line` has full coverage back to 1999).
+
+Graded 2021-2025 (1,424 games):
+- **ATS cover overall: 46.9%-51.3% across |edge| buckets — below
+  breakeven everywhere.** Same conclusion as every other model tried
+  (spread, moneyline, all segment slices).
+- **Under-only split:** 0-1pt 53.0% (ROI +2.1%), 1-2pt 50.9%, 2-3pt
+  45.7% (worst bucket), 3+pt 54.8% (ROI +5.6%, n=104). No monotonic
+  pattern — the one bucket clearing breakeven has a thin sample and no
+  causal story for why it'd clear while the 2-3pt bucket doesn't.
+- **Raw cutoff test** (bucket by the model's predicted total itself,
+  not edge vs. the market — i.e. "does a low predicted total actually
+  mean more unders, regardless of pricing"): 55.2% / 48.6% / 51.5% /
+  55.3% / 53.3% across five predicted-total bands. Bounces around
+  48-55% with no trend — reads as noise, not a usable cutoff.
+
+Fitted weights are directionally sensible (home_pf/away_pf ~0.58-0.62,
+home_pa/away_pa ~0.32-0.37, intercept 1.5-3.3 — both a team's own
+scoring and its opponent's scoring-allowed push the total the expected
+direction), so the model isn't broken. It's the same story as SRS:
+knowing team quality doesn't beat the closing total any more than it
+beat the closing spread.
+
+**Verdict: closes the highest-prior backlog item — "bad teams → under"
+does not hold up as a standalone rule once as-of/no-leakage tested,
+despite being an intuitive story.** Same universal conclusion as every
+market tested so far: the market prices scoring-pace information as
+well as it prices everything else. Remaining untested: weather-
+conditioned totals (item 4, was gated on this model existing — now
+unblocked if worth pursuing), and the original lower-prior items
+(short-window pressure, recency-weighted SRS, turnover margin,
+red-zone rate).
+
+
+---
+
+**Q: Two user hypotheses from watching box scores: (1) "a team that
+gives fewer QB pressures usually wins if the two quarterbacks are about
+the same" — pressure-as-tiebreaker; (2) can weather data (already in
+`games.csv`: temp/wind/roof/surface — no separate pull needed) point at
+under bets?**
+
+A: **Both built and graded. Pressure: the literal claim is true but
+useless — protection is a general quality marker, not a tiebreaker, and
+the market already prices it. Weather: nothing anywhere EXCEPT wind —
+the first signal in this project with dose-response AND era stability.**
+
+`backtest_pressure.py` (Phase 9): no new model, slices the cached as-of
+features (2021-2025, 1,424 games). Pick = team with the lower trailing
+pressure-allowed rate.
+
+- **Unconditional:** lower-prate team wins 56.4% (n=1,424) — protection
+  quality does pick winners outright. But ATS 51.8%, ROI −0.1% — the
+  spread already reflects it.
+- **Condition A (|epa_diff| ≤ 0.05, "QBs even"):** win 55.2% — the
+  tiebreaker version is NOT stronger than unconditional (56.4%).
+  Pressure helps equally everywhere; it is not amplified when the QBs
+  are even.
+- **Both model AND market say even** (|epa_diff|≤0.08 AND |spread|≤3):
+  49.5% win (n=307) — a pure coin flip. No tiebreaker power at all in
+  the exact slice the hypothesis names.
+- **Control (|epa_diff| > 0.12):** lower-prate team wins 61.6% —
+  protection correlates with overall passing quality, which explains
+  why it "works" unconditionally.
+- **Dose-response not monotone** (condition B across |prate_diff|
+  bands: 48.5/48.0/57.3/52.6). The above-breakeven pockets (55.0% at
+  |epa|≤0.05, 55.8% at |spread|≤2.5, one dose band at 59.2%) read as
+  noise across ~10 cuts, not structure.
+
+`backtest_weather.py` (Phase 10): raw cuts 2000-2025 (7,017 games with
+closing totals) + walk-forward pace+weather model (2021-2025, Phase 8
+harness, expanding-window OLS, both models on identical games).
+
+- **Temp: nothing** (47.8-52.4% under across five bands, no trend).
+  **Roof:** indoor 48.2% / outdoor 51.3% — priced. **Thursday:** exactly
+  50.0%. **Division:** 51.9%. All dead.
+- **Wind: the exception.** Blind under by outdoor wind band: 0-6 mph
+  48.3% (n=1,518) → 6-11 50.2% (n=2,088) → 11-16 55.5% (n=945) → 16+
+  55.5% (n=457). Dose-response plus a plausible mechanism (passing
+  efficiency and FG range both degrade). Era split in the 11-16 band:
+  53.9 / 51.0 / 59.1 / 60.3% across 2000-06 / 07-13 / 14-19 / 20-25 —
+  NOT decaying; market miss −1.6 and −1.4 pts in the two recent eras
+  (the market lowers wind totals, but only about half as much as
+  scoring actually drops). The 16+ band decays (56.6 → 51.8%) on thin
+  per-era n (~85-130) — possibly books sharpening on high-profile wind
+  games while 11-16 stays the quiet band.
+- The walk-forward model fits wind at **−0.23 pts/mph, stable across
+  all five expanding windows** (a 15-mph game ≈ −3.5 pts off the
+  total), yet pace+weather still doesn't clear breakeven pooled (49.4%
+  at |edge|≥2) — consistent with "the close adjusts for wind, just not
+  enough at 11-16 mph." Under-only at |edge|≥3: 58.1% (n=93), thin,
+  same caveat as Phase 8's 3+ bucket.
+
+**Verdict:** pressure-as-tiebreaker is CLOSED, no edge — when both the
+model and the market agree the teams are even, protection picks winners
+at coin-flip rate. Wind is flagged as the project's first forward-test
+candidate FROM THE TOTALS MARKET: blind under, outdoor games with wind
+≥11 mph (especially 11-16), ~57-60% recent-era cover vs the 52.4%
+breakeven. Same standing as road_dog had at this stage — honest
+backtest signal, parameters eyeballed from the data, unproven until a
+forward paper trail exists. Weather caveats: nflverse temp/wind is an
+airport-level daily snapshot (2022 has a source gap, n=96 with wind),
+not stadium-hour-precise. Next step if pursued: a small weekly
+wind-under qualifier overlay with graded paper-trail logging, modeled
+on road_dog_system.py.
+
+---
+
+**Q: Wind angle confirmed worth pursuing — build the weekly qualifier
+tool ("wind angle is good yes").**
+
+A: **Built — `systems/wind_under/wind_under_system.py`, modeled on
+`road_dog_system.py`, with one design problem solved: games.csv's
+`wind` is ACTUAL game-time wind (recorded post-game), so unplayed games
+need a forecast.** The tool joins Open-Meteo (free, no key, global —
+covers London/Germany/Mexico games) at per-stadium coordinates for the
+kickoff hour (gametime in games.csv is ET; converted to UTC for the
+hourly lookup). Qualifier rule: outdoor game (`roof` in
+outdoors/open), wind >= 11 mph -> bet under. Retractable-roof games
+(`roof` NaN until the team announces) FAIL safe with "roof TBD -- likely
+closes in wind; re-check". The `--results`/`--week N` paper trail
+grades on ACTUAL recorded wind, with the divergence caveat printed
+(live picks are made on forecasts).
+
+`--backtest` (2000-2025, actual `under_odds` where present, -110
+fallback): **pooled 55.2% under, ROI +7.0%, n=1,307 decided — ABOVE
+breakeven in ALL four eras** (54.8 / 52.7 / 56.8 / 57.7%), and above
+in both bands (11-15: 55.7%, +7.9%; 16+: 54.4%, +5.2%). The 16+ band
+is much weaker in the recent era split from Phase 10 (~51-52% in
+2014-2025), so qualifiers are band-tagged in the weekly/results views
+and the forward trail will decide whether 16+ stays in the rule.
+
+First graded bet is already in the book: week 1 2026, DEN @ KC Monday
+night, actual wind 13 mph, under 42.5 -> final 41, WON +0.91u. Week 2
+view worked end-to-end with live forecasts (one qualifier flagged, one
+at 10.2 mph just under the threshold — exactly the re-check-Sunday
+case the tool warns about).
+
+**Verdict: system is live for forward-testing, same standing as
+road_dog — honest backtest signal (positive in every era, mechanism
+understood), parameters chosen post-hoc, unproven until the forward
+paper trail accumulates.** Expect volume to cluster in Nov-Dec (the
+2025 slate shows ~20 qualifiers, almost all weeks 6-14). Remaining
+honesty gap vs road_dog: forecasts aren't stored, so the graded set is
+reconstructed from actual wind; storing each run's forecast qualifiers
+(a predictions_log.csv-style append) is the cheap upgrade if the trail
+gets serious.

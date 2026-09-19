@@ -36,8 +36,16 @@ from nfl_box_score_analysis import load_games, load_pbp, build_long_results
 from team_composite import qb_epa_by_team_game, pressure_allowed_by_team_game
 from srs import blended_asof_ratings
 from backtest_srs import normal_cdf, report
+from predict_week import to_pbp_name
 
 FEATURES = ["home_flag", "srs_diff", "epa_diff", "prate_diff"]
+FEATURES_QB = FEATURES + ["qb_epa_diff", "qb_catch_diff"]
+
+# Same placeholder blend constants as streamlit_scoreboard.cached_qb_epa_asof
+# (display code) -- reused here so Phase 7b's model feature matches what the
+# app already shows.
+QB_K_PSEUDO_DB = 150.0
+QB_SHRINK = 0.7
 
 
 def trailing_features(games, pbp_seasons, k=4.0, shrink=0.7):
@@ -93,8 +101,114 @@ def trailing_features(games, pbp_seasons, k=4.0, shrink=0.7):
     return tg[["game_id", "season", "week", "team", "epa_db_asof", "prate_asof"]]
 
 
-def assemble_games(games, seasons, srs_ratings, tg):
-    """One row per played game with all four model inputs as-of."""
+def qb_season_asof(pbp_cur, pbp_prev):
+    """As-of per (week, passer): EPA/dropback and catch% through PRIOR weeks
+    of the season, cold-start blended with the prior season. Same math as
+    streamlit_scoreboard.cached_qb_epa_asof, lifted here (no Streamlit
+    dependency, takes pbp frames directly) so it can run inside a
+    walk-forward backtest -- Phase 7b."""
+    db = pbp_cur[(pbp_cur["qb_dropback"] == 1) & pbp_cur["passer_player_name"].notna()]
+    per = db.groupby(["passer_player_name", "week"]).agg(
+        epa=("epa", "sum"), n=("epa", "count"),
+        comp=("complete_pass", "sum"), att=("pass_attempt", "sum")).reset_index()
+    frames = []
+    for qb, grp in per.groupby("passer_player_name"):
+        grp = grp.set_index("week").reindex(range(1, 23), fill_value=0)
+        for col in ("epa", "n", "comp", "att"):
+            grp[f"{col}_cum"] = grp[col].cumsum().shift(1).fillna(0)
+        grp["passer_player_name"] = qb
+        grp["week"] = grp.index
+        frames.append(grp.reset_index(drop=True))
+    cur = (pd.concat(frames, ignore_index=True) if frames else
+           pd.DataFrame(columns=["week", "passer_player_name", "epa_cum", "n_cum",
+                                 "comp_cum", "att_cum"]))
+
+    prior_epa, prior_catch = {}, {}
+    if pbp_prev is not None:
+        db_prev = pbp_prev[(pbp_prev["qb_dropback"] == 1)
+                           & pbp_prev["passer_player_name"].notna()]
+        tot = db_prev.groupby("passer_player_name").agg(
+            epa_sum=("epa", "sum"), n=("epa", "count"),
+            comp=("complete_pass", "sum"), att=("pass_attempt", "sum"))
+        lg_epa = tot["epa_sum"].sum() / tot["n"].sum()
+        lg_catch = tot["comp"].sum() / tot["att"].sum()
+        prior_epa = {qb: lg_epa + QB_SHRINK * (v - lg_epa)
+                     for qb, v in (tot["epa_sum"] / tot["n"]).items()}
+        prior_catch = {qb: lg_catch + QB_SHRINK * (v - lg_catch)
+                       for qb, v in (tot["comp"] / tot["att"]).items()}
+
+    cur["cur_epa_db"] = cur["epa_cum"] / cur["n_cum"].where(cur["n_cum"] > 0)
+    cur["cur_catch"] = cur["comp_cum"] / cur["att_cum"].where(cur["att_cum"] > 0)
+    cur["prior_epa_db"] = cur["passer_player_name"].map(prior_epa)
+    cur["prior_catch"] = cur["passer_player_name"].map(prior_catch)
+    w = cur["n_cum"] / (cur["n_cum"] + QB_K_PSEUDO_DB)
+    blended_epa = w * cur["cur_epa_db"].fillna(0) + (1 - w) * cur["prior_epa_db"]
+    blended_catch = w * cur["cur_catch"].fillna(0) + (1 - w) * cur["prior_catch"]
+    cur["epa_db"] = blended_epa.fillna(cur["cur_epa_db"])
+    cur["catch_pct"] = blended_catch.fillna(cur["cur_catch"])
+
+    have_cur = set(cur["passer_player_name"])
+    prior_only = [qb for qb in prior_epa if qb not in have_cur]
+    if prior_only:
+        extra = pd.DataFrame({
+            "week": [w_ for _ in prior_only for w_ in range(1, 23)],
+            "passer_player_name": [qb for qb in prior_only for _ in range(1, 23)],
+            "epa_db": [prior_epa[qb] for qb in prior_only for _ in range(1, 23)],
+            "catch_pct": [prior_catch[qb] for qb in prior_only for _ in range(1, 23)],
+        })
+        cur = pd.concat([cur, extra], ignore_index=True)
+    return cur[["week", "passer_player_name", "epa_db", "catch_pct"]]
+
+
+def qb_starter_features(games, pbp_seasons):
+    """Per (game_id, side): the LISTED STARTER's as-of EPA/db and catch%,
+    bridging games.csv's home_qb_name/away_qb_name to pbp passer names via
+    to_pbp_name. This is Phase 7b's untested variant: starter-level, so it
+    catches injuries/benchings that trailing_features' TEAM-level EPA
+    cannot. Missing starters (no pbp match -- name mismatch or true
+    no-data rookie) fall back to that season/week's league-average, so no
+    game is dropped for a missing QB stat alone."""
+    pbp_cache = {}
+    for s in pbp_seasons:
+        try:
+            pbp_cache[s] = load_pbp(s)
+            print(f"  loaded QB passer stats for {s}", file=sys.stderr)
+        except Exception as e:
+            print(f"  note: no play-by-play for {s} ({type(e).__name__}) -- "
+                  f"QB features for it rely on prior-season blend only", file=sys.stderr)
+
+    frames = []
+    for s in pbp_seasons:
+        if s not in pbp_cache:
+            continue
+        qb = qb_season_asof(pbp_cache[s], pbp_cache.get(s - 1))
+        qb["season"] = s
+        frames.append(qb)
+    qb_all = pd.concat(frames, ignore_index=True)
+    league_avg = qb_all.groupby(["season", "week"])[["epa_db", "catch_pct"]] \
+        .mean().reset_index()
+
+    g = games.dropna(subset=["home_score", "away_score"]).copy()
+    g["season"] = g["season"].astype(int)
+    g = g[g["season"].isin(list(pbp_seasons))]
+
+    out = g[["game_id"]].copy()
+    for side, col in [("home", "home_qb_name"), ("away", "away_qb_name")]:
+        t = g[["game_id", "season", "week", col]].copy()
+        t["abbr"] = t[col].apply(to_pbp_name)
+        t = t.merge(qb_all, left_on=["season", "week", "abbr"],
+                    right_on=["season", "week", "passer_player_name"], how="left")
+        t = t.merge(league_avg, on=["season", "week"], how="left", suffixes=("", "_lg"))
+        t["epa_db"] = t["epa_db"].fillna(t["epa_db_lg"])
+        t["catch_pct"] = t["catch_pct"].fillna(t["catch_pct_lg"])
+        out[f"{side}_qb_epa"] = t["epa_db"].values
+        out[f"{side}_qb_catch"] = t["catch_pct"].values
+    return out
+
+
+def assemble_games(games, seasons, srs_ratings, tg, qb_feat=None):
+    """One row per played game with all four model inputs as-of, plus
+    Phase 7b's starter QB diffs when qb_feat is given."""
     g = games.dropna(subset=["home_score", "away_score"]).copy()
     g["season"] = g["season"].astype(int)
     g = g[g["season"].isin(list(seasons))]
@@ -113,6 +227,10 @@ def assemble_games(games, seasons, srs_ratings, tg):
                     on=["game_id", tcol], how="left")
     g["epa_diff"] = g["home_epa"] - g["away_epa"]
     g["prate_diff"] = g["home_prate"] - g["away_prate"]
+    if qb_feat is not None:
+        g = g.merge(qb_feat, on="game_id", how="left")
+        g["qb_epa_diff"] = (g["home_qb_epa"] - g["away_qb_epa"]).fillna(0.0)
+        g["qb_catch_diff"] = (g["home_qb_catch"] - g["away_qb_catch"]).fillna(0.0)
     return g.dropna(subset=["srs_diff", "epa_diff", "prate_diff"])
 
 
@@ -165,6 +283,8 @@ def main():
     p.add_argument("--shrink", type=float, default=0.7, help="prior-season regression")
     p.add_argument("--cap", type=float, default=None, help="SRS margin cap")
     p.add_argument("--rule", type=float, default=4.0, help="betting-rule |edge| threshold")
+    p.add_argument("--qb", action="store_true",
+                   help="also fit Phase 7b: M2 = M1 + starter QB EPA/db + catch% diffs")
     args = p.parse_args()
 
     games = load_games()
@@ -176,24 +296,33 @@ def main():
 
     srs_ratings = blended_asof_ratings(games, feat_seasons, cap=args.cap,
                                        k=args.k, shrink=args.shrink)
-    g = assemble_games(games, feat_seasons, srs_ratings, tg)
+    qb_feat = qb_starter_features(games, pbp_seasons) if args.qb else None
+    g = assemble_games(games, feat_seasons, srs_ratings, tg, qb_feat=qb_feat)
+
+    models = [("M0 SRS-only", ["home_flag", "srs_diff"]), ("M1 blend", FEATURES)]
+    if args.qb:
+        models.append(("M2 blend + QB starter", FEATURES_QB))
 
     print("\nFitted weights per eval season (expanding window):")
-    for label, cols in [("M1 blend", FEATURES), ("M0 SRS-only", ["home_flag", "srs_diff"])]:
+    for label, cols in models:
         _, coefs = fit_predict(g, args.eval_seasons, cols)
         line = " | ".join(f"{S}: " + ", ".join(f"{c}={v}" for c, v in co.items()
                                                if c not in ("std", "train_n"))
                           for S, co in coefs.items())
         print(f"  {label}: {line}")
 
-    for label, cols in [("M0 SRS-only (fitted, same window)", ["home_flag", "srs_diff"]),
-                        ("M1 blend: SRS + EPA/db + pressure (fitted)", FEATURES)]:
+    report_labels = {
+        "M0 SRS-only": "M0 SRS-only (fitted, same window)",
+        "M1 blend": "M1 blend: SRS + EPA/db + pressure (fitted)",
+        "M2 blend + QB starter": "M2 blend + starter QB EPA/db + catch% (fitted) -- Phase 7b",
+    }
+    for label, cols in models:
         pred, _ = fit_predict(g, args.eval_seasons, cols)
         df, ats = grade_model(pred)
         report(df, ats, args.eval_seasons,
                "HFA: fitted per season (home_flag coef above)",
                "win-prob std: per-season train residuals",
-               args.rule, f"Phase 7 {label}",
+               args.rule, f"Phase 7 {report_labels[label]}",
                footer="\nNo leakage: features are as-of (trailing, cold-start blended); "
                "weights are fit on seasons < the graded one (expanding window). "
                "Blend constants k/shrink still untuned placeholders.")

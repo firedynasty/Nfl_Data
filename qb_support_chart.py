@@ -1,5 +1,13 @@
 """
-QB chart: Pass ADOT vs catch%, colored by Game Performance Score.
+QB chart: EPA/dropback vs catch%, colored by Game Performance Score.
+
+EPA/dropback replaced Pass ADOT (Sep 2026) -- ADOT only describes throwing
+*style* (how far downfield), not whether the throws actually created value.
+EPA/dropback is the standard NFL efficiency stat for that, and it's also
+now one of the components inside the Game Performance Score itself (see
+team_composite.py), so the color and the x-axis are measuring related but
+not identical things: x-axis is this QB's own EPA/dropback, color is his
+whole team's composite (offense + defense-adjacent stats + record).
 
 Labels are placed with force-directed repulsion (adjustText): each label
 is pushed away from other labels and points until nothing overlaps -- the
@@ -15,8 +23,9 @@ Usage:
     matplotlib + adjustText installed)
 
 Weekly refresh:
-    python team_composite.py --seasons 2026 --qb_csv ~/Downloads/qb_adot_catchpct.csv
-    python qb_support_chart.py
+    python build_qb_csv.py --season 2026 --out ~/Downloads/qb_epa_catchpct.csv
+    python team_composite.py --seasons 2026 --qb_csv ~/Downloads/qb_epa_catchpct.csv
+    python qb_support_chart.py --csv ~/Downloads/qb_epa_catchpct_with_game_performance.csv
 """
 
 import argparse
@@ -32,8 +41,8 @@ from matplotlib import cm, colors as mcolors
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("--csv", default="/Users/stanleytan/Downloads/qb_adot_catchpct_with_game_performance.csv")
-    ap.add_argument("--out", default="/Users/stanleytan/Downloads/qb_adot_catchpct_game_performance.png")
+    ap.add_argument("--csv", default="/Users/stanleytan/Downloads/qb_epa_catchpct_with_game_performance.csv")
+    ap.add_argument("--out", default="/Users/stanleytan/Downloads/qb_epa_catchpct_game_performance.png")
     args = ap.parse_args()
 
     df = pd.read_csv(args.csv)
@@ -43,17 +52,17 @@ def main():
     cmap = matplotlib.colormaps["RdYlGn"]
     colors = [cmap(norm(s)) for s in df["game_performance_score"]]
 
-    ax.scatter(df["adot"], df["catch_pct"] * 100, c=colors, s=120,
+    ax.scatter(df["epa_per_dropback"], df["catch_pct"] * 100, c=colors, s=120,
                edgecolors="k", linewidths=0.5, zorder=3)
 
     texts = [
-        ax.text(r["adot"], r["catch_pct"] * 100,
+        ax.text(r["epa_per_dropback"], r["catch_pct"] * 100,
                 f"{r['passer_player_name']} {r['record_str']} ({r['game_performance_score']:.0f})",
                 fontsize=9, zorder=4)
         for _, r in df.iterrows()
     ]
     adjust_text(
-        texts, x=df["adot"].to_numpy(), y=(df["catch_pct"] * 100).to_numpy(),
+        texts, x=df["epa_per_dropback"].to_numpy(), y=(df["catch_pct"] * 100).to_numpy(),
         ax=ax,
         force_text=(0.6, 0.8),    # label-vs-label repulsion (the forcefield)
         force_points=(0.4, 0.6),  # label-vs-point repulsion
@@ -61,19 +70,19 @@ def main():
         arrowprops=dict(arrowstyle="-", color="gray", lw=0.6, alpha=0.7),
     )
 
-    m, b = np.polyfit(df["adot"], df["catch_pct"] * 100, 1)
-    xs = np.linspace(df["adot"].min(), df["adot"].max(), 50)
+    m, b = np.polyfit(df["epa_per_dropback"], df["catch_pct"] * 100, 1)
+    xs = np.linspace(df["epa_per_dropback"].min(), df["epa_per_dropback"].max(), 50)
     ax.plot(xs, m * xs + b, color="gray", lw=1, zorder=2)
 
-    ax.axvline(df["adot"].mean(), color="gray", ls="--", lw=0.8)
+    ax.axvline(df["epa_per_dropback"].mean(), color="gray", ls="--", lw=0.8)
     ax.axhline(df["catch_pct"].mean() * 100, color="gray", ls="--", lw=0.8)
 
     sm = cm.ScalarMappable(cmap=cmap, norm=norm)
     plt.colorbar(sm, ax=ax, label="Game Performance Score (0-100)")
 
-    ax.set_title("Pass ADOT & CATCH % - 2026\n(color = Game Performance Score, label = QB, record, score)",
+    ax.set_title("QB EPA/Dropback & CATCH % - 2026\n(color = Game Performance Score, label = QB, record, score)",
                  fontsize=14)
-    ax.set_xlabel("Pass ADOT")
+    ax.set_xlabel("EPA / Dropback")
     ax.set_ylabel("CATCH %")
     ax.yaxis.set_major_formatter(lambda x, _: f"{x:.0f}%")
     ax.margins(0.06)
@@ -82,9 +91,9 @@ def main():
     print(f"saved {args.out}")
 
     # Tidy CSV of exactly what the chart plots, sorted by score
-    chart_data = df[["passer_player_name", "team", "record_str", "adot",
+    chart_data = df[["passer_player_name", "team", "record_str", "epa_per_dropback",
                      "catch_pct", "game_performance_score"]].copy()
-    chart_data["adot"] = chart_data["adot"].round(1)
+    chart_data["epa_per_dropback"] = chart_data["epa_per_dropback"].round(3)
     chart_data["catch_pct"] = (chart_data["catch_pct"] * 100).round(1)
     chart_data = chart_data.sort_values("game_performance_score", ascending=False)
     data_out = args.out.rsplit(".", 1)[0] + "_data.csv"

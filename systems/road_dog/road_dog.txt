@@ -1,0 +1,40 @@
+90: checks = {
+91:     "Sun/Mon": r["weekday"] in ("Sunday", "Monday"),
+92:     "away=underdog": (not dog_home) or args.include_home,
+93:     f"+{args.min_pts:g}-{args.max_pts:g}": args.min_pts <= pts <= args.max_pts,
+94:     f"prior<={args.prior_max:g}": p is not None and p <= args.prior_max,
+95:     f"total<{args.total_max:g}": r["total_line"] < args.total_max,
+96: }
+
+① "Sun/Mon" — game must be Sunday or Monday.
+Why: Thursday teams get ~3 days of rest instead of ~6, and in the data bad teams on short weeks covered only 45%. Sloppy, unpredictable games — the system sits them out. (No flag to override; it's hard-coded.)
+
+② "away=underdog" — the points must go to the away team.
+Why: home field is worth ~2–3 points free, so a small spread at home is a weak compliment. On the road it's a loud one. 26 years: road version ~60%, home version showed no edge. This week 1's rejected home dogs went 0–4. (--include-home loosens it — historically dilutes the edge.)
+
+③ "+1-3.5" — the dog gets between 1 and 3.5 points.
+Why: this is the secret detector. A 3–14 team "should" get ~6–7 on the road. Getting only +2.5 means Vegas's homework says they've improved. Getting +6.5 means the market agrees they're bad — no secret, no edge, and that bucket grades ~48% (a loser after the vig). (--min-pts / --max-pts to change the band.)
+
+④ "prior<=0.294" — the dog's last-season win% must be ≤ 0.294 (≈ 5 wins in 17 games).
+Why: the whole trick needs the public to think the team stinks, and the public only remembers last year's record. The win% comes from season_records() (line 58), which replays the previous season game-by-game counting wins. A team at 7–10 doesn't trigger enough public disgust — and good teams (like DEN at 14–3 getting +2.5) are a completely different bet. (--prior-max 0.354 would let 6–11 teams in — edge weakens but survives.)
+
+⑤ "total<45" — the over/under must be below 45.
+Why: points are worth more in low-scoring games. +3 in a 17–14 game is huge; +3 in a 38–35 game is a rounding error. This is the weakest of the five filters — the cell was 62% with it, 58.6% without it — so it adds a little, it isn't carrying the system. (--total-max 46 to loosen.)
+
+Cheat sheet
+
+┌─────┬────────────────┬────────────┬──────────────────────────────────────────────────┬─────────────────────────────┐
+│  #  │     Filter     │ Code line  │               The que  │       26-yr evidence        │
+├─────┼────────────────┼────────────┼──────────────────────────────────────────────────┼─────────────────────────────┤
+│ 1   │ Sun/Mon only   │ 91         │ Did both teams get a   │ Thursdays: 45% cover        │
+├─────┼────────────────┼────────────┼──────────────────────────────────────────────────┼─────────────────────────────┤
+│ 2   │ Away=underdog  │ 92         │ Is the compliment lou? │ road ~60% / home ~0 edge    │
+├─────┼────────────────┼────────────┼──────────────────────────────────────────────────┼─────────────────────────────┤
+│ 3   │ +1 to +3.5     │ 93         │ Does the market disre  │ small ~60% / big ~48%       │
+├─────┼────────────────┼────────────┼──────────────────────────────────────────────────┼─────────────────────────────┤
+│ 4   │ Prior ≤ 5 wins │ 94, via 58 │ Does the public still  │ ≤5 wins ~60% / ≤6 wins ~55% │
+├─────┼────────────────┼────────────┼──────────────────────────────────────────────────┼─────────────────────────────┤
+│ 5   │ Total < 45     │ 95         │ Are points precious i  │ 62% with / 58.6% without    │
+└─────┴────────────────┴────────────┴──────────────────────────────────────────────────┴─────────────────────────────┘
+
+And the one-line summary of all five working together: find a team everyone remembers as terrible, playing on the road, in a low-scoring game, on a normal week — where Vegas's own number accidentally admitmore.
