@@ -1,0 +1,193 @@
+season,week,matchup,market,side,bets_pct,money_pct,diff,scraped_at
+2026,2,Carolina Panthers @ Atlanta Falcons,Spread,ATL +2.5,27.89,20.62,-7.27,2026-09-18T21:29:05
+2026,2,Carolina Panthers @ Atlanta Falcons,Spread,CAR -2.5,72.11,79.38,7.27,2026-09-18T21:29:05
+2026,2,Carolina Panthers @ Atlanta Falcons,Total,O 43.5,26.11,68.8,42.69,2026-09-18T21:29:05
+2026,2,Carolina Panthers @ Atlanta Falcons,Total,U 43.5,73.89,31.2,-42.69,2026-09-18T21:29:05
+2026,2,Carolina Panthers @ Atlanta Falcons,Money Line,ATL +125,22.74,11.68,-11.06,2026-09-18T21:29:05
+2026,2,Carolina Panthers @ Atlanta Falcons,Money Line,CAR -150,77.26,88.32,11.06,2026-09-18T21:29:05
+2026,2,Cincinnati Bengals @ Houston Texans,Spread,HOU -2.5,45.55,38.62,-6.93,2026-09-18T21:29:05
+2026,2,Cincinnati Bengals @ Houston Texans,Spread,CIN +2.5,54.45,61.38,6.93,2026-09-18T21:29:05
+2026,2,Cincinnati Bengals @ Houston Texans,Total,O 45.5,22.45,61.54,39.09,2026-09-18T21:29:05
+2026,2,Cincinnati Bengals @ Houston Texans,Total,U 45.5,77.55,38.46,-39.09,2026-09-18T21:29:05
+2026,2,Cincinnati Bengals @ Houston Texans,Money Line,HOU -145,69.82,84.26,14.44,2026-09-18T21:29:05
+2026,2,Cincinnati Bengals @ Houston Texans,Money Line,CIN +119,30.18,15.74,-14.44,2026-09-18T21:29:05
+2026,2,Cleveland Browns @ Tampa Bay Buccaneers,Spread,TB -8.5,84.71,94.04,9.33,2026-09-18T21:29:05
+2026,2,Cleveland Browns @ Tampa Bay Buccaneers,Spread,CLE +8.5,15.29,5.96,-9.33,2026-09-18T21:29:05
+2026,2,Cleveland Browns @ Tampa Bay Buccaneers,Total,O 41.5,21.41,55.37,33.96,2026-09-18T21:29:05
+2026,2,Cleveland Browns @ Tampa Bay Buccaneers,Total,U 41.5,78.59,44.63,-33.96,2026-09-18T21:29:05
+2026,2,Cleveland Browns @ Tampa Bay Buccaneers,Money Line,TB -450,97.42,97.57,0.15,2026-09-18T21:29:05
+2026,2,Cleveland Browns @ Tampa Bay Buccaneers,Money Line,CLE +350,2.58,2.43,-0.15,2026-09-18T21:29:05
+2026,2,Detroit Lions 31 - Buffalo Bills 41,Spread,DET +5.5,52.98,39.11,-13.87,2026-09-18T21:29:05
+2026,2,Detroit Lions 31 - Buffalo Bills 41,Spread,BUF -5.5,47.02,60.89,13.87,2026-09-18T21:29:05
+2026,2,Detroit Lions 31 - Buffalo Bills 41,Total,U 54.5,83.59,39.29,-44.3,2026-09-18T21:29:05
+2026,2,Detroit Lions 31 - Buffalo Bills 41,Total,O 54.5,16.41,60.71,44.3,2026-09-18T21:29:05
+2026,2,Detroit Lions 31 - Buffalo Bills 41,Money Line,BUF -247,91.5,88.68,-2.82,2026-09-18T21:29:05
+2026,2,Detroit Lions 31 - Buffalo Bills 41,Money Line,DET +199,8.5,11.32,2.82,2026-09-18T21:29:05
+2026,2,Green Bay Packers @ New York Jets,Spread,GB -3.5,77.07,53.79,-23.28,2026-09-18T21:29:05
+2026,2,Green Bay Packers @ New York Jets,Spread,NYJ +3.5,22.93,46.21,23.28,2026-09-18T21:29:05
+2026,2,Green Bay Packers @ New York Jets,Total,O 44.5,21.64,24.88,3.24,2026-09-18T21:29:05
+2026,2,Green Bay Packers @ New York Jets,Total,U 44.5,78.36,75.12,-3.24,2026-09-18T21:29:05
+2026,2,Green Bay Packers @ New York Jets,Money Line,NYJ +158,8.89,8.14,-0.75,2026-09-18T21:29:05
+2026,2,Green Bay Packers @ New York Jets,Money Line,GB -190,91.11,91.86,0.75,2026-09-18T21:29:05
+2026,2,Indianapolis Colts @ Kansas City Chiefs,Spread,KC -6.5,73.08,64.72,-8.36,2026-09-18T21:29:05
+2026,2,Indianapolis Colts @ Kansas City Chiefs,Spread,IND +6.5,26.92,35.28,8.36,2026-09-18T21:29:05
+2026,2,Indianapolis Colts @ Kansas City Chiefs,Total,O 46.5,17.3,30.44,13.14,2026-09-18T21:29:05
+2026,2,Indianapolis Colts @ Kansas City Chiefs,Total,U 46.5,82.7,69.56,-13.14,2026-09-18T21:29:05
+2026,2,Indianapolis Colts @ Kansas City Chiefs,Money Line,KC -300,98.44,94.63,-3.81,2026-09-18T21:29:05
+2026,2,Indianapolis Colts @ Kansas City Chiefs,Money Line,IND +240,1.56,5.37,3.81,2026-09-18T21:29:05
+2026,2,Jacksonville Jaguars @ Denver Broncos,Spread,DEN -2.5,29.38,10.27,-19.11,2026-09-18T21:29:05
+2026,2,Jacksonville Jaguars @ Denver Broncos,Spread,JAX +2.5,70.62,89.73,19.11,2026-09-18T21:29:05
+2026,2,Jacksonville Jaguars @ Denver Broncos,Total,O 45.5,15.11,32.7,17.59,2026-09-18T21:29:05
+2026,2,Jacksonville Jaguars @ Denver Broncos,Total,U 45.5,84.89,67.3,-17.59,2026-09-18T21:29:05
+2026,2,Jacksonville Jaguars @ Denver Broncos,Money Line,DEN -150,60.48,44.04,-16.44,2026-09-18T21:29:05
+2026,2,Jacksonville Jaguars @ Denver Broncos,Money Line,JAX +125,39.52,55.96,16.44,2026-09-18T21:29:05
+2026,2,Las Vegas Raiders @ Los Angeles Chargers,Spread,LAC -6.5,38.94,45.23,6.29,2026-09-18T21:29:05
+2026,2,Las Vegas Raiders @ Los Angeles Chargers,Spread,LV +6.5,61.06,54.77,-6.29,2026-09-18T21:29:05
+2026,2,Las Vegas Raiders @ Los Angeles Chargers,Total,O 43.5,19.51,24.13,4.62,2026-09-18T21:29:05
+2026,2,Las Vegas Raiders @ Los Angeles Chargers,Total,U 43.5,80.49,75.87,-4.62,2026-09-18T21:29:05
+2026,2,Las Vegas Raiders @ Los Angeles Chargers,Money Line,LAC -299,86.12,89.56,3.44,2026-09-18T21:29:05
+2026,2,Las Vegas Raiders @ Los Angeles Chargers,Money Line,LV +241,13.88,10.44,-3.44,2026-09-18T21:29:05
+2026,2,Miami Dolphins @ San Francisco 49ers,Spread,SF -13.5,79.43,79.9,0.47,2026-09-18T21:29:05
+2026,2,Miami Dolphins @ San Francisco 49ers,Spread,MIA +13.5,20.57,20.1,-0.47,2026-09-18T21:29:05
+2026,2,Miami Dolphins @ San Francisco 49ers,Total,O 45,17.77,16.02,-1.75,2026-09-18T21:29:05
+2026,2,Miami Dolphins @ San Francisco 49ers,Total,U 45,82.23,83.98,1.75,2026-09-18T21:29:05
+2026,2,Miami Dolphins @ San Francisco 49ers,Money Line,SF -924,98.66,96.37,-2.29,2026-09-18T21:29:05
+2026,2,Miami Dolphins @ San Francisco 49ers,Money Line,MIA +645,1.34,3.63,2.29,2026-09-18T21:29:05
+2026,2,Minnesota Vikings @ Chicago Bears,Spread,CHI -4.5,58.35,52.43,-5.92,2026-09-18T21:29:05
+2026,2,Minnesota Vikings @ Chicago Bears,Spread,MIN +4.5,41.65,47.57,5.92,2026-09-18T21:29:05
+2026,2,Minnesota Vikings @ Chicago Bears,Total,O 48.5,15.38,25.42,10.04,2026-09-18T21:29:05
+2026,2,Minnesota Vikings @ Chicago Bears,Total,U 48.5,84.62,74.58,-10.04,2026-09-18T21:29:05
+2026,2,Minnesota Vikings @ Chicago Bears,Money Line,CHI -220,90.31,75.2,-15.11,2026-09-18T21:29:05
+2026,2,Minnesota Vikings @ Chicago Bears,Money Line,MIN +180,9.69,24.8,15.11,2026-09-18T21:29:05
+2026,2,New Orleans Saints @ Baltimore Ravens,Spread,BAL -8.5,78.4,81.81,3.41,2026-09-18T21:29:05
+2026,2,New Orleans Saints @ Baltimore Ravens,Spread,NO +8.5,21.6,18.19,-3.41,2026-09-18T21:29:05
+2026,2,New Orleans Saints @ Baltimore Ravens,Total,O 46.5,14.33,51.1,36.77,2026-09-18T21:29:05
+2026,2,New Orleans Saints @ Baltimore Ravens,Total,U 46.5,85.67,48.9,-36.77,2026-09-18T21:29:05
+2026,2,New Orleans Saints @ Baltimore Ravens,Money Line,BAL -425,96.91,93.12,-3.79,2026-09-18T21:29:05
+2026,2,New Orleans Saints @ Baltimore Ravens,Money Line,NO +329,3.09,6.88,3.79,2026-09-18T21:29:05
+2026,2,New York Giants @ Los Angeles Rams,Spread,LAR -7.5,32.49,40.01,7.52,2026-09-18T21:29:05
+2026,2,New York Giants @ Los Angeles Rams,Spread,NYG +7.5,67.51,59.99,-7.52,2026-09-18T21:29:05
+2026,2,New York Giants @ Los Angeles Rams,Total,O 48,40.52,49.71,9.19,2026-09-18T21:29:05
+2026,2,New York Giants @ Los Angeles Rams,Total,U 48,59.48,50.29,-9.19,2026-09-18T21:29:05
+2026,2,New York Giants @ Los Angeles Rams,Money Line,LAR -345,88.56,72.32,-16.24,2026-09-18T21:29:05
+2026,2,New York Giants @ Los Angeles Rams,Money Line,NYG +271,11.44,27.68,16.24,2026-09-18T21:29:05
+2026,2,Philadelphia Eagles @ Tennessee Titans,Spread,PHI -7,93.39,96.61,3.22,2026-09-18T21:29:05
+2026,2,Philadelphia Eagles @ Tennessee Titans,Spread,TEN +7,6.61,3.39,-3.22,2026-09-18T21:29:05
+2026,2,Philadelphia Eagles @ Tennessee Titans,Total,O 39.5,18.25,18.56,0.31,2026-09-18T21:29:05
+2026,2,Philadelphia Eagles @ Tennessee Titans,Total,U 39.5,81.75,81.44,-0.31,2026-09-18T21:29:05
+2026,2,Philadelphia Eagles @ Tennessee Titans,Money Line,TEN +272,1.74,2.03,0.29,2026-09-18T21:29:05
+2026,2,Philadelphia Eagles @ Tennessee Titans,Money Line,PHI -350,98.26,97.97,-0.29,2026-09-18T21:29:05
+2026,2,Pittsburgh Steelers @ New England Patriots,Spread,NE -5,38.65,46.05,7.4,2026-09-18T21:29:05
+2026,2,Pittsburgh Steelers @ New England Patriots,Spread,PIT +5,61.35,53.95,-7.4,2026-09-18T21:29:05
+2026,2,Pittsburgh Steelers @ New England Patriots,Total,O 41.5,27.47,24.5,-2.97,2026-09-18T21:29:05
+2026,2,Pittsburgh Steelers @ New England Patriots,Total,U 41.5,72.53,75.5,2.97,2026-09-18T21:29:05
+2026,2,Pittsburgh Steelers @ New England Patriots,Money Line,NE -239,82.88,74.46,-8.42,2026-09-18T21:29:05
+2026,2,Pittsburgh Steelers @ New England Patriots,Money Line,PIT +195,17.12,25.54,8.42,2026-09-18T21:29:05
+2026,2,Seattle Seahawks @ Arizona Cardinals,Spread,SEA -4,62.2,74.15,11.95,2026-09-18T21:29:05
+2026,2,Seattle Seahawks @ Arizona Cardinals,Spread,ARI +4,37.8,25.85,-11.95,2026-09-18T21:29:05
+2026,2,Seattle Seahawks @ Arizona Cardinals,Total,O 40.5,76.76,65.97,-10.79,2026-09-18T21:29:05
+2026,2,Seattle Seahawks @ Arizona Cardinals,Total,U 40.5,23.24,34.03,10.79,2026-09-18T21:29:05
+2026,2,Seattle Seahawks @ Arizona Cardinals,Money Line,ARI +175,7.08,9.46,2.38,2026-09-18T21:29:05
+2026,2,Seattle Seahawks @ Arizona Cardinals,Money Line,SEA -210,92.92,90.54,-2.38,2026-09-18T21:29:05
+2026,1,Arizona Cardinals 26 - Los Angeles Chargers 14,Spread,ARI +9.5,29.36,25.96,-3.4,2026-09-18T21:51:56
+2026,1,Arizona Cardinals 26 - Los Angeles Chargers 14,Spread,LAC -9.5,70.64,74.04,3.4,2026-09-18T21:51:56
+2026,1,Arizona Cardinals 26 - Los Angeles Chargers 14,Total,U 47.5,90.0,84.5,-5.5,2026-09-18T21:51:56
+2026,1,Arizona Cardinals 26 - Los Angeles Chargers 14,Total,O 47.5,10.0,15.5,5.5,2026-09-18T21:51:56
+2026,1,Arizona Cardinals 26 - Los Angeles Chargers 14,Money Line,LAC -480,96.52,97.49,0.97,2026-09-18T21:51:56
+2026,1,Arizona Cardinals 26 - Los Angeles Chargers 14,Money Line,ARI +372,3.48,2.51,-0.97,2026-09-18T21:51:56
+2026,1,Atlanta Falcons 13 - Pittsburgh Steelers 20,Spread,ATL +6.5,37.48,14.69,-22.79,2026-09-18T21:51:56
+2026,1,Atlanta Falcons 13 - Pittsburgh Steelers 20,Spread,PIT -6.5,62.52,85.31,22.79,2026-09-18T21:51:56
+2026,1,Atlanta Falcons 13 - Pittsburgh Steelers 20,Total,O 40.5,23.6,18.65,-4.95,2026-09-18T21:51:56
+2026,1,Atlanta Falcons 13 - Pittsburgh Steelers 20,Total,U 40.5,76.4,81.35,4.95,2026-09-18T21:51:56
+2026,1,Atlanta Falcons 13 - Pittsburgh Steelers 20,Money Line,PIT -305,90.86,92.49,1.63,2026-09-18T21:51:56
+2026,1,Atlanta Falcons 13 - Pittsburgh Steelers 20,Money Line,ATL +247,9.14,7.51,-1.63,2026-09-18T21:51:56
+2026,1,Baltimore Ravens 41 - Indianapolis Colts 23,Spread,BAL -3,67.64,37.21,-30.43,2026-09-18T21:51:56
+2026,1,Baltimore Ravens 41 - Indianapolis Colts 23,Spread,IND +3,32.36,62.79,30.43,2026-09-18T21:51:56
+2026,1,Baltimore Ravens 41 - Indianapolis Colts 23,Total,O 48.5,12.84,13.92,1.08,2026-09-18T21:51:56
+2026,1,Baltimore Ravens 41 - Indianapolis Colts 23,Total,U 48.5,87.16,86.08,-1.08,2026-09-18T21:51:56
+2026,1,Baltimore Ravens 41 - Indianapolis Colts 23,Money Line,IND +135,9.0,3.87,-5.13,2026-09-18T21:51:56
+2026,1,Baltimore Ravens 41 - Indianapolis Colts 23,Money Line,BAL -161,91.0,96.13,5.13,2026-09-18T21:51:56
+2026,1,Buffalo Bills 36 - Houston Texans 31,Spread,HOU +1.5,44.73,51.66,6.93,2026-09-18T21:51:56
+2026,1,Buffalo Bills 36 - Houston Texans 31,Spread,BUF -1.5,55.27,48.34,-6.93,2026-09-18T21:51:56
+2026,1,Buffalo Bills 36 - Houston Texans 31,Total,O 44.5,17.2,62.0,44.8,2026-09-18T21:51:56
+2026,1,Buffalo Bills 36 - Houston Texans 31,Total,U 44.5,82.8,38.0,-44.8,2026-09-18T21:51:56
+2026,1,Buffalo Bills 36 - Houston Texans 31,Money Line,BUF -117,72.54,71.26,-1.28,2026-09-18T21:51:56
+2026,1,Buffalo Bills 36 - Houston Texans 31,Money Line,HOU -102,27.46,28.74,1.28,2026-09-18T21:51:56
+2026,1,Chicago Bears 59 - Carolina Panthers 37,Spread,CHI -3,67.2,53.27,-13.93,2026-09-18T21:51:56
+2026,1,Chicago Bears 59 - Carolina Panthers 37,Spread,CAR +3,32.8,46.73,13.93,2026-09-18T21:51:56
+2026,1,Chicago Bears 59 - Carolina Panthers 37,Total,O 47.5,11.34,51.87,40.53,2026-09-18T21:51:56
+2026,1,Chicago Bears 59 - Carolina Panthers 37,Total,U 47.5,88.66,48.13,-40.53,2026-09-18T21:51:56
+2026,1,Chicago Bears 59 - Carolina Panthers 37,Money Line,CHI -163,89.48,93.62,4.14,2026-09-18T21:51:56
+2026,1,Chicago Bears 59 - Carolina Panthers 37,Money Line,CAR +135,10.52,6.38,-4.14,2026-09-18T21:51:56
+2026,1,Cleveland Browns 10 - Jacksonville Jaguars 34,Spread,CLE +8.5,35.94,18.21,-17.73,2026-09-18T21:51:56
+2026,1,Cleveland Browns 10 - Jacksonville Jaguars 34,Spread,JAX -8.5,64.06,81.79,17.73,2026-09-18T21:51:56
+2026,1,Cleveland Browns 10 - Jacksonville Jaguars 34,Total,O 40.5,31.18,31.46,0.28,2026-09-18T21:51:56
+2026,1,Cleveland Browns 10 - Jacksonville Jaguars 34,Total,U 40.5,68.82,68.54,-0.28,2026-09-18T21:51:56
+2026,1,Cleveland Browns 10 - Jacksonville Jaguars 34,Money Line,CLE +350,5.96,6.96,1.0,2026-09-18T21:51:56
+2026,1,Cleveland Browns 10 - Jacksonville Jaguars 34,Money Line,JAX -450,94.04,93.04,-1.0,2026-09-18T21:51:56
+2026,1,Dallas Cowboys 20 - New York Giants 28,Spread,DAL -3,60.5,71.6,11.1,2026-09-18T21:51:56
+2026,1,Dallas Cowboys 20 - New York Giants 28,Spread,NYG +3,39.5,28.4,-11.1,2026-09-18T21:51:56
+2026,1,Dallas Cowboys 20 - New York Giants 28,Total,O 47.5,14.33,17.34,3.01,2026-09-18T21:51:56
+2026,1,Dallas Cowboys 20 - New York Giants 28,Total,U 47.5,85.67,82.66,-3.01,2026-09-18T21:51:56
+2026,1,Dallas Cowboys 20 - New York Giants 28,Money Line,DAL -172,87.72,85.65,-2.07,2026-09-18T21:51:56
+2026,1,Dallas Cowboys 20 - New York Giants 28,Money Line,NYG +142,12.28,14.35,2.07,2026-09-18T21:51:56
+2026,1,Denver Broncos 10 - Kansas City Chiefs 31,Spread,DEN +2.5,73.33,81.09,7.76,2026-09-18T21:51:56
+2026,1,Denver Broncos 10 - Kansas City Chiefs 31,Spread,KC -2.5,26.67,18.91,-7.76,2026-09-18T21:51:56
+2026,1,Denver Broncos 10 - Kansas City Chiefs 31,Total,U 42.5,76.33,63.07,-13.26,2026-09-18T21:51:56
+2026,1,Denver Broncos 10 - Kansas City Chiefs 31,Total,O 42.5,23.67,36.93,13.26,2026-09-18T21:51:56
+2026,1,Denver Broncos 10 - Kansas City Chiefs 31,Money Line,DEN +107,36.25,21.75,-14.5,2026-09-18T21:51:56
+2026,1,Denver Broncos 10 - Kansas City Chiefs 31,Money Line,KC -130,63.75,78.25,14.5,2026-09-18T21:51:56
+2026,1,Green Bay Packers 22 - Minnesota Vikings 39,Spread,GB +2.5,55.86,49.19,-6.67,2026-09-18T21:51:56
+2026,1,Green Bay Packers 22 - Minnesota Vikings 39,Spread,MIN -2.5,44.14,50.81,6.67,2026-09-18T21:51:56
+2026,1,Green Bay Packers 22 - Minnesota Vikings 39,Total,O 45.5,9.19,13.39,4.2,2026-09-18T21:51:56
+2026,1,Green Bay Packers 22 - Minnesota Vikings 39,Total,U 45.5,90.81,86.61,-4.2,2026-09-18T21:51:56
+2026,1,Green Bay Packers 22 - Minnesota Vikings 39,Money Line,MIN -140,58.47,71.02,12.55,2026-09-18T21:51:56
+2026,1,Green Bay Packers 22 - Minnesota Vikings 39,Money Line,GB +120,41.53,28.98,-12.55,2026-09-18T21:51:56
+2026,1,Miami Dolphins 13 - Las Vegas Raiders 27,Spread,MIA +3,46.2,58.61,12.41,2026-09-18T21:51:56
+2026,1,Miami Dolphins 13 - Las Vegas Raiders 27,Spread,LV -3,53.8,41.39,-12.41,2026-09-18T21:51:56
+2026,1,Miami Dolphins 13 - Las Vegas Raiders 27,Total,O 40.5,29.47,33.86,4.39,2026-09-18T21:51:56
+2026,1,Miami Dolphins 13 - Las Vegas Raiders 27,Total,U 40.5,70.53,66.14,-4.39,2026-09-18T21:51:56
+2026,1,Miami Dolphins 13 - Las Vegas Raiders 27,Money Line,MIA +140,14.74,18.93,4.19,2026-09-18T21:51:56
+2026,1,Miami Dolphins 13 - Las Vegas Raiders 27,Money Line,LV -175,85.26,81.07,-4.19,2026-09-18T21:51:56
+2026,1,New England Patriots 10 - Seattle Seahawks 13,Spread,NE +3.5,54.22,64.78,10.56,2026-09-18T21:51:56
+2026,1,New England Patriots 10 - Seattle Seahawks 13,Spread,SEA -3.5,45.78,35.22,-10.56,2026-09-18T21:51:56
+2026,1,New England Patriots 10 - Seattle Seahawks 13,Total,O 44.5,28.43,35.25,6.82,2026-09-18T21:51:56
+2026,1,New England Patriots 10 - Seattle Seahawks 13,Total,U 44.5,71.57,64.75,-6.82,2026-09-18T21:51:56
+2026,1,New England Patriots 10 - Seattle Seahawks 13,Money Line,NE +151,17.76,51.37,33.61,2026-09-18T21:51:56
+2026,1,New England Patriots 10 - Seattle Seahawks 13,Money Line,SEA -190,82.24,48.63,-33.61,2026-09-18T21:51:56
+2026,1,New Orleans Saints 30 - Detroit Lions 31,Spread,NO +7,37.58,26.77,-10.81,2026-09-18T21:51:56
+2026,1,New Orleans Saints 30 - Detroit Lions 31,Spread,DET -7,62.42,73.23,10.81,2026-09-18T21:51:56
+2026,1,New Orleans Saints 30 - Detroit Lions 31,Total,U 49.5,85.92,33.57,-52.35,2026-09-18T21:51:56
+2026,1,New Orleans Saints 30 - Detroit Lions 31,Total,O 49.5,14.08,66.43,52.35,2026-09-18T21:51:56
+2026,1,New Orleans Saints 30 - Detroit Lions 31,Money Line,DET -327,96.21,97.92,1.71,2026-09-18T21:51:56
+2026,1,New Orleans Saints 30 - Detroit Lions 31,Money Line,NO +262,3.79,2.08,-1.71,2026-09-18T21:51:56
+2026,1,New York Jets 23 - Tennessee Titans 10,Spread,NYJ +1.5,44.49,52.29,7.8,2026-09-18T21:51:56
+2026,1,New York Jets 23 - Tennessee Titans 10,Spread,TEN -1.5,55.51,47.71,-7.8,2026-09-18T21:51:56
+2026,1,New York Jets 23 - Tennessee Titans 10,Total,O 39.5,39.21,41.61,2.4,2026-09-18T21:51:56
+2026,1,New York Jets 23 - Tennessee Titans 10,Total,U 39.5,60.79,58.39,-2.4,2026-09-18T21:51:56
+2026,1,New York Jets 23 - Tennessee Titans 10,Money Line,NYJ -100,27.22,24.42,-2.8,2026-09-18T21:51:56
+2026,1,New York Jets 23 - Tennessee Titans 10,Money Line,TEN -120,72.78,75.58,2.8,2026-09-18T21:51:56
+2026,1,San Francisco 49ers 27 - Los Angeles Rams 7,Spread,SF +3.5,38.63,58.01,19.38,2026-09-18T21:51:56
+2026,1,San Francisco 49ers 27 - Los Angeles Rams 7,Spread,LAR -3.5,61.37,41.99,-19.38,2026-09-18T21:51:56
+2026,1,San Francisco 49ers 27 - Los Angeles Rams 7,Total,O 47.5,20.03,30.74,10.71,2026-09-18T21:51:56
+2026,1,San Francisco 49ers 27 - Los Angeles Rams 7,Total,U 47.5,79.97,69.26,-10.71,2026-09-18T21:51:56
+2026,1,San Francisco 49ers 27 - Los Angeles Rams 7,Money Line,SF +165,12.14,18.31,6.17,2026-09-18T21:51:56
+2026,1,San Francisco 49ers 27 - Los Angeles Rams 7,Money Line,LAR -202,87.86,81.69,-6.17,2026-09-18T21:51:56
+2026,1,Tampa Bay Buccaneers 27 - Cincinnati Bengals 33,Spread,TB +3.5,53.82,58.51,4.69,2026-09-18T21:51:56
+2026,1,Tampa Bay Buccaneers 27 - Cincinnati Bengals 33,Spread,CIN -3.5,46.18,41.49,-4.69,2026-09-18T21:51:56
+2026,1,Tampa Bay Buccaneers 27 - Cincinnati Bengals 33,Total,O 50.5,9.98,25.44,15.46,2026-09-18T21:51:56
+2026,1,Tampa Bay Buccaneers 27 - Cincinnati Bengals 33,Total,U 50.5,90.02,74.56,-15.46,2026-09-18T21:51:56
+2026,1,Tampa Bay Buccaneers 27 - Cincinnati Bengals 33,Money Line,CIN -190,86.77,84.0,-2.77,2026-09-18T21:51:56
+2026,1,Tampa Bay Buccaneers 27 - Cincinnati Bengals 33,Money Line,TB +160,13.23,16.0,2.77,2026-09-18T21:51:56
+2026,1,Washington Commanders 22 - Philadelphia Eagles 24,Spread,WAS +6,34.76,25.58,-9.18,2026-09-18T21:51:56
+2026,1,Washington Commanders 22 - Philadelphia Eagles 24,Spread,PHI -6,65.24,74.42,9.18,2026-09-18T21:51:56
+2026,1,Washington Commanders 22 - Philadelphia Eagles 24,Total,U 44,86.19,81.6,-4.59,2026-09-18T21:51:56
+2026,1,Washington Commanders 22 - Philadelphia Eagles 24,Total,O 44,13.81,18.4,4.59,2026-09-18T21:51:56
+2026,1,Washington Commanders 22 - Philadelphia Eagles 24,Money Line,WAS +212,4.18,2.69,-1.49,2026-09-18T21:51:56
+2026,1,Washington Commanders 22 - Philadelphia Eagles 24,Money Line,PHI -267,95.82,97.31,1.49,2026-09-18T21:51:56
+2026,2,Washington Commanders @ Dallas Cowboys,Spread,DAL -4,37.7,39.83,2.13,2026-09-18T22:28:21
+2026,2,Washington Commanders @ Dallas Cowboys,Spread,WAS +4,62.3,60.17,-2.13,2026-09-18T22:28:21
+2026,2,Washington Commanders @ Dallas Cowboys,Total,O 50.5,14.85,38.71,23.86,2026-09-18T22:28:21
+2026,2,Washington Commanders @ Dallas Cowboys,Total,U 50.5,85.15,61.29,-23.86,2026-09-18T22:28:21
+2026,2,Washington Commanders @ Dallas Cowboys,Money Line,DAL -210,84.6,72.29,-12.31,2026-09-18T22:28:21
+2026,2,Washington Commanders @ Dallas Cowboys,Money Line,WAS +171,15.4,27.71,12.31,2026-09-18T22:28:21
