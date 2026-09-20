@@ -55,6 +55,17 @@ USAGE
 This is a decision aid, not a signal with a proven edge -- see the honesty
 rule above. It logs every run to kalshi_advisor_log.csv (append-only, pass
 --no-log to skip) so you can look back at what it said vs what happened.
+
+INTUITION JOURNAL
+------------------
+The first time it sees an OPEN position, it prompts you (on the terminal,
+not stdin, so `pbpaste | ...` still works) for why you like it, and saves
+that note to kalshi_advisor_notes.csv keyed to the position. Leave it blank
+to skip. Once the position resolves (SOLD/WON/LOST) and you re-run the
+advisor on the same slate, the saved note is handed back to the LLM, which
+grades it GOOD/MIXED/BAD against the signals you actually had at entry
+time -- not just against whether you happened to win. Pass --no-notes to
+turn this off entirely.
 """
 
 import argparse
@@ -71,6 +82,7 @@ PREDICTIONS_LOG = os.path.join(REPO_ROOT, "predictions_log.csv")
 PUBLIC_MONEY_LOG = os.path.join(REPO_ROOT, "public_money_log.csv")
 GAME_PERFORMANCE_CSV = os.path.join(REPO_ROOT, "game_performance_score.csv")
 LOG_PATH = os.path.join(os.path.dirname(__file__), "kalshi_advisor_log.csv")
+NOTES_PATH = os.path.join(os.path.dirname(__file__), "kalshi_advisor_notes.csv")
 
 BREAKEVEN_NOTE = (
     "This repo's own honest walk-forward backtest (2021-2025) found the SRS "
@@ -150,6 +162,81 @@ def parse_slate(text):
             "game_time": game_time, "placed": placed,
         })
     return rows
+
+
+# --- "why did you like this" journal -----------------------------------
+#
+# The idea: when a position is still OPEN, ask the trader (once, at a
+# terminal, not via stdin so piping a pasted slate still works) why they
+# like it, and stash that note keyed to the position. Next time this script
+# runs against the *same* position after it's resolved (SOLD/WON/LOST), the
+# note gets handed back to the LLM so it can give a candid "was this good
+# intuition, in hindsight" read instead of just a bare settled/unsettled
+# verdict.
+
+def note_key(bet):
+    """(team, opp, placed) -- placed timestamp is set once when the bet is
+    placed and doesn't change as the position moves from Open to
+    Sold/Won/Lost, so it's a stable key across a position's lifecycle."""
+    return (bet["team_abbr"], bet["opp_abbr"] or "", bet["placed"] or "")
+
+
+def load_notes(path=NOTES_PATH):
+    """key -> most recently saved note text."""
+    if not os.path.exists(path):
+        return {}
+    df = pd.read_csv(path, dtype=str, keep_default_na=False)
+    if df.empty:
+        return {}
+    out = {}
+    for _, r in df.iterrows():
+        out[(r["team_abbr"], r["opp_abbr"], r["placed"])] = r["note"]
+    return out
+
+
+def save_note(key, matchup_raw, note, path=NOTES_PATH):
+    team_abbr, opp_abbr, placed = key
+    row = pd.DataFrame([{
+        "logged_at": datetime.now().isoformat(timespec="seconds"),
+        "team_abbr": team_abbr, "opp_abbr": opp_abbr, "placed": placed,
+        "matchup_raw": matchup_raw, "note": note,
+    }])
+    row.to_csv(path, mode="a", header=not os.path.exists(path), index=False)
+
+
+def prompt_tty(prompt_text):
+    """Prompts on the controlling terminal even when stdin was already
+    consumed piping in the pasted slate. Returns None (no prompt asked,
+    e.g. non-interactive/cron use) rather than raising if there's no tty."""
+    try:
+        with open("/dev/tty") as tty_in, open("/dev/tty", "w") as tty_out:
+            tty_out.write(prompt_text)
+            tty_out.flush()
+            line = tty_in.readline()
+    except OSError:
+        return None
+    return line.strip() or None
+
+
+def collect_notes(bets, no_notes=False):
+    """For each OPEN position with no saved note yet, ask why the trader
+    likes it and save the answer. Returns {bet_index: note_text} for every
+    bet that has a note (freshly asked or previously saved)."""
+    notes = load_notes()
+    result = {}
+    for i, b in enumerate(bets):
+        key = note_key(b)
+        if key not in notes and not no_notes and b["status"].strip().lower() == "open":
+            answer = prompt_tty(
+                f"\nWhy do you like {b['matchup_raw']} ({b['kalshi_prob'] * 100:.0f}%)? "
+                f"(Enter your reasoning, or blank to skip): "
+            )
+            if answer:
+                save_note(key, b["matchup_raw"], answer)
+                notes[key] = answer
+        if key in notes and notes[key]:
+            result[i] = notes[key]
+    return result
 
 
 # --- the three signals -----------------------------------------------
@@ -239,7 +326,7 @@ def load_composite():
     }
 
 
-def build_context(bet, model_probs, yahoo_probs, composite):
+def build_context(bet, model_probs, yahoo_probs, composite, user_note=None):
     ctx = dict(bet)
     ctx["model"] = model_probs.get(bet["team_abbr"])
     ctx["yahoo_ml"] = yahoo_probs.get(bet["team_abbr"])
@@ -247,6 +334,7 @@ def build_context(bet, model_probs, yahoo_probs, composite):
     if bet["opp_abbr"]:
         ctx["opp_model"] = model_probs.get(bet["opp_abbr"])
         ctx["opp_composite"] = composite.get(bet["opp_abbr"])
+    ctx["user_note"] = user_note
     return ctx
 
 
@@ -279,6 +367,10 @@ For each position you're given:
   turnovers/win%) for descriptive context, not a probability.
 - the position's own economics (bought price, payout if it resolves yes,
   current sell price, status).
+- user_note: the trader's OWN words, written at entry time, on why they
+  liked this position (may be null if they didn't write one). This is
+  their stated intuition, not a signal -- don't treat it as evidence, but
+  DO engage with it directly in your reasoning.
 
 Weight kalshi_prob and yahoo_ml_prob most heavily -- they are two
 independent, efficient markets that usually agree with each other. Use
@@ -303,14 +395,28 @@ fair-value estimate, or is still favorable), SELL (fair value has clearly
 dropped below the current sell price -- cut it), BUY_MORE (fair value is
 clearly above kalshi_prob -- rare, explain why), or PASS (signals conflict
 or are too thin for a real opinion -- say so honestly instead of forcing a
-take). For SOLD/WON/LOST positions, just give a one-line retrospective note
-and use verdict "SETTLED".
+take). For SOLD/WON/LOST positions, use verdict "SETTLED" and give a
+retrospective: did they win or lose (status tells you), and -- ONLY if
+user_note is non-null -- was their stated intuition actually good, judged
+against the signals they had at entry time (kalshi_prob/yahoo_ml/model/
+public_sharp_diff), not just against whether they happened to win. A
+correct guess for a bad reason is BAD intuition; a loss despite sound
+reasoning that the market/model also supported is GOOD intuition gone
+wrong on variance -- say so plainly, don't just grade on the outcome.
+
+For every position set intuition_grade based on user_note:
+- null if user_note is null/missing (nothing to grade)
+- "GOOD" if the stated reasoning was sound given what was knowable then
+- "MIXED" if partly right, partly shaky, or right for an incomplete reason
+- "BAD" if the reasoning was contradicted by the signals they had, or the
+  win/loss was really about something else -- say what, plainly
 
 Return ONLY a JSON object shaped exactly:
 {{"positions": [
   {{"team": "...", "verdict": "HOLD|SELL|BUY_MORE|PASS|SETTLED",
    "confidence_1to5": 1-5, "fair_prob_estimate": 0.0-1.0 or null,
-   "reasoning": "2-3 sentences, concrete, cites the actual numbers you were given"}}
+   "intuition_grade": "GOOD|MIXED|BAD|null",
+   "reasoning": "2-3 sentences, concrete, cites the actual numbers you were given, and directly addresses user_note if one was given"}}
 ]}}
 One object per position, in the SAME ORDER they were given."""
 
@@ -341,6 +447,8 @@ def print_odds_table(contexts):
     print(f"\n{'Team':5} {'Opp':4} {'Status':7} {'Kalshi':>7} {'Model':>7} {'YahooOdds':>9} {'YahooML':>8} "
           f"{'Bet%':>6} {'Mon%':>6} {'SharpΔ':>7} {'GPscore':>8}")
     for c in contexts:
+        if c.get("user_note"):
+            print(f"  note [{c['team_abbr']}]: {c['user_note']}")
         model_p = c["model"]["model_win_prob"] if c["model"] else None
         yahoo = c["yahoo_ml"]
         yahoo_p = yahoo["yahoo_ml_prob"] if yahoo else None
@@ -379,6 +487,7 @@ def log_results(contexts, verdicts, model_name, path=LOG_PATH):
             "ai_model": model_name, "verdict": v.get("verdict"),
             "confidence_1to5": v.get("confidence_1to5"),
             "fair_prob_estimate": v.get("fair_prob_estimate"), "reasoning": v.get("reasoning"),
+            "user_note": c.get("user_note"), "intuition_grade": v.get("intuition_grade"),
         })
     df = pd.DataFrame(rows)
     df.to_csv(path, mode="a", header=not os.path.exists(path), index=False)
@@ -398,6 +507,8 @@ def main():
                    help="skip the OpenAI call, just print the merged odds table")
     p.add_argument("--no-log", action="store_true",
                    help="don't append results to kalshi_advisor_log.csv")
+    p.add_argument("--no-notes", action="store_true",
+                   help="don't prompt for (or use) 'why did you like this' notes on open positions")
     args = p.parse_args()
 
     text = open(args.file).read() if args.file else sys.stdin.read()
@@ -405,8 +516,12 @@ def main():
     if not bets:
         sys.exit("no parseable positions found")
 
-    contexts = [build_context(b, load_model_probs(), load_yahoo_signals(), load_composite())
-                for b in bets]
+    notes = collect_notes(bets, no_notes=args.no_notes)
+    contexts = [
+        build_context(b, load_model_probs(), load_yahoo_signals(), load_composite(),
+                      user_note=notes.get(i))
+        for i, b in enumerate(bets)
+    ]
 
     print_odds_table(contexts)
     print(f"\n{BREAKEVEN_NOTE}")
@@ -429,6 +544,8 @@ def main():
         print(f"\n{c['matchup_raw']}  [{c['status']}]")
         print(f"  -> {v.get('verdict')} (confidence {v.get('confidence_1to5')}/5, "
               f"fair_prob~{v.get('fair_prob_estimate')})")
+        if v.get("intuition_grade"):
+            print(f"     intuition: {v.get('intuition_grade')}")
         print(f"     {v.get('reasoning')}")
 
     if not args.no_log:
