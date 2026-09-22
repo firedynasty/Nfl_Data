@@ -139,7 +139,10 @@ def cached_qb_epa_asof(season: int) -> pd.DataFrame:
             comp=("complete_pass", "sum"), att=("pass_attempt", "sum")).reset_index()
         frames = []
         for qb, grp in per.groupby("passer_player_name"):
-            grp = grp.set_index("week").reindex(range(1, 23), fill_value=0)
+            # Drop the string column before reindex: pandas >=3's strict string
+            # dtype rejects fill_value=0 on a str column (passer_player_name is
+            # reassigned right below anyway), where pandas 2.x silently coerced it.
+            grp = grp.drop(columns="passer_player_name").set_index("week").reindex(range(1, 23), fill_value=0)
             for col in ("epa", "n", "comp", "att"):
                 grp[f"{col}_cum"] = grp[col].cumsum().shift(1).fillna(0)  # through prior weeks
             grp["passer_player_name"] = qb
