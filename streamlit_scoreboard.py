@@ -147,7 +147,14 @@ def cached_qb_epa_asof(season: int) -> pd.DataFrame:
             frames.append(grp.reset_index(drop=True))
         cur = pd.concat(frames, ignore_index=True)
         del pbp
-    except Exception:
+    except Exception as e:
+        # This is the current season's own pbp -- a failure here means the
+        # chart will look "empty" for a real reason (bad fetch, nflverse
+        # hiccup, season not published yet), not because no QB has played.
+        # Surface it instead of silently returning zero rows, which used to
+        # be indistinguishable from a legitimate "no QB chart data yet".
+        st.warning(f"QB stats: couldn't load {season} play-by-play ({e}). "
+                   "QB chart / QB labels will be empty until this succeeds.")
         cur = pd.DataFrame(columns=["week", "passer_player_name", "team", "epa_cum",
                                     "n_cum", "comp_cum", "att_cum"])
 
@@ -161,10 +168,22 @@ def cached_qb_epa_asof(season: int) -> pd.DataFrame:
             comp=("complete_pass", "sum"), att=("pass_attempt", "sum"))
         lg_epa = tot["epa_sum"].sum() / tot["n"].sum()
         lg_catch = tot["comp"].sum() / tot["att"].sum()
-        # regress priors toward the LEAGUE MEAN, not toward 0
-        prior_epa = {qb: lg_epa + QB_SHRINK * (v - lg_epa)
+        # Regress priors toward the LEAGUE MEAN, not toward 0 -- but QB_SHRINK
+        # alone assumes the prior-season AVERAGE is itself reliable, which
+        # fails for thin priors (a backup's 30-40 mop-up dropbacks is a wildly
+        # noisy EPA/db). Scale the shrink by the prior sample's own size
+        # (same K as the current-season cold-start weight below) so a QB with
+        # only ~40 prior dropbacks gets pulled close to league-average before
+        # QB_SHRINK is even applied, while a full prior season (500+
+        # dropbacks) is barely touched by this extra factor. Without this, a
+        # small unsustainable prior (e.g. Malik Willis's +0.74 EPA/db over 38
+        # garbage-time snaps in 2025) dominated the blend for months into the
+        # next season even after his real current-season play (-0.08) said
+        # otherwise.
+        prior_reliability = tot["n"] / (tot["n"] + QB_K_PSEUDO_DB)
+        prior_epa = {qb: lg_epa + QB_SHRINK * prior_reliability[qb] * (v - lg_epa)
                      for qb, v in (tot["epa_sum"] / tot["n"]).items()}
-        prior_catch = {qb: lg_catch + QB_SHRINK * (v - lg_catch)
+        prior_catch = {qb: lg_catch + QB_SHRINK * prior_reliability[qb] * (v - lg_catch)
                        for qb, v in (tot["comp"] / tot["att"]).items()}
         del pbp_prev
     except Exception:
@@ -243,12 +262,29 @@ def cached_composite_score(season: int) -> dict[str, float]:
 MIN_CHART_DROPBACKS = 20
 
 
-def qb_chart_frame(season: int, week: int) -> pd.DataFrame:
+def latest_completed_week(games: pd.DataFrame, season: int) -> int:
+    """Most recent week in this season with at least one final score, or 0
+    if the season hasn't kicked off yet. This is what the QB chart's
+    "Current" option resolves to."""
+    sub = games[games["season"] == season]
+    played = sub.dropna(subset=["home_score", "away_score"])
+    return int(played["week"].max()) if len(played) else 0
+
+
+def qb_chart_frame(season: int, through_week: int) -> pd.DataFrame:
     """One row per QB with enough volume THIS season (n_cum >=
-    MIN_CHART_DROPBACKS), stats as of `week`, team record, and the team's
-    Game Performance Score."""
+    MIN_CHART_DROPBACKS), stats THROUGH `through_week` inclusive (i.e.
+    counting that week's games), team record, and the team's Game
+    Performance Score.
+
+    cached_qb_epa_asof stores each week's cumulative total as of *before*
+    that week (shifted by one, for no-leakage predictions), so "through
+    week W inclusive" is that frame's row at week=W+1 -- translate here so
+    every caller of this function can think in plain "through week W"
+    terms instead of tripping over the shift."""
     qb = cached_qb_epa_asof(season)
-    df = qb[(qb["week"] == week) & (qb["n_cum"] >= MIN_CHART_DROPBACKS)].dropna(
+    lookup_week = min(through_week + 1, 22)
+    df = qb[(qb["week"] == lookup_week) & (qb["n_cum"] >= MIN_CHART_DROPBACKS)].dropna(
         subset=["epa_db", "catch_pct", "team"]).copy()
     if df.empty:
         return df
@@ -306,16 +342,20 @@ def repel_labels(xs, ys, iters=250):
     return lx * xr + x0, ly * yr + y0
 
 
-def render_qb_chart(season: int, week: int):
+def render_qb_chart(season: int, through_week: int):
     """The QB EPA/catch% scatter (qb_support_chart.py's look), colored by
     Game Performance Score, rendered in-app with Altair (no matplotlib
-    dependency on Streamlit Cloud)."""
-    df = qb_chart_frame(season, week)
-    st.markdown(f"**QB EPA/dropback & catch% — as of week {week}, {season}** "
+    dependency on Streamlit Cloud). `through_week` is inclusive -- games
+    from that week are counted."""
+    df = qb_chart_frame(season, through_week)
+    label = f"through week {through_week}" if through_week > 0 else "before week 1 (preseason)"
+    st.markdown(f"**QB EPA/dropback & catch% — {label}, {season}** "
                 "(color = Game Performance Score)")
     if df.empty:
-        st.caption("No QB numbers yet for this week — they appear once a QB "
-                   "has played this season.")
+        st.caption(f"No QB has {MIN_CHART_DROPBACKS}+ dropbacks {label} yet. "
+                   "If games from this week are already final, try picking "
+                   "an earlier week, or \"Current\" once this week's play-by-"
+                   "play has been published by nflverse.")
         return
     base = alt.Chart(df).encode(
         x=alt.X("epa_db:Q", title="EPA / Dropback"),
@@ -342,8 +382,8 @@ def render_qb_chart(season: int, week: int):
     st.caption(f"Hover any dot for team, record, and exact numbers. QBs with "
                f"<{MIN_CHART_DROPBACKS} dropbacks this season are hidden "
                f"(punters, trick plays, mop-up). Same construction as the "
-               f"standalone QB chart, but as-of the selected week with the "
-               f"prior-season blend.")
+               f"standalone QB chart, but as-of \"through week {through_week}\" "
+               f"above, with the prior-season blend.")
 
 
 def current_season_and_week(games: pd.DataFrame) -> tuple[int, int]:
@@ -369,13 +409,21 @@ def day_label(gameday: pd.Timestamp) -> str:
     return gameday.strftime("%a, %b %-d")
 
 
-def stats_table(game_stats: pd.DataFrame, game_id: str, away: str, home: str, away_label: str, home_label: str) -> pd.DataFrame:
+def stats_table(game_stats: pd.DataFrame, game_id: str, away: str, home: str, away_label: str,
+                home_label: str, srs_by_team: dict | None = None) -> pd.DataFrame:
+    """srs_by_team: {team -> rating}, already as-of BEFORE this game's week
+    (no leakage) -- same rating the Predictions tab would have shown ahead
+    of kickoff, so it reads as "how good the numbers said they were", not
+    a rating that's seen this game's own result."""
     g = game_stats[game_stats["game_id"] == game_id].set_index("team")
+    srs_by_team = srs_by_team or {}
     rows = {}
     for team, label in ((away, away_label), (home, home_label)):
+        srs = srs_by_team.get(team)
+        srs_str = f"{srs:+.1f}" if srs is not None else "-"
         if team not in g.index:
-            rows[label] = {"1st": "-", "Plays": "-", "Yards": "-", "Yds/Play": "-", "TO's": "-",
-                            "Rush #": "-", "Yds": "-", "Yds/Att": "-",
+            rows[label] = {"SRS": srs_str, "1st": "-", "Plays": "-", "Yards": "-", "Yds/Play": "-",
+                            "TO's": "-", "Rush #": "-", "Yds": "-", "Yds/Att": "-",
                             "RZ TD": "-", "RZ Score": "-", "QB Hits": "-", "Sacks": "-"}
             continue
         r = g.loc[team]
@@ -383,6 +431,7 @@ def stats_table(game_stats: pd.DataFrame, game_id: str, away: str, home: str, aw
         rz_td = int(r["rz_td"]) if pd.notna(r["rz_td"]) else 0
         rz_scored = int(r["rz_scored"]) if pd.notna(r["rz_scored"]) else 0
         rows[label] = {
+            "SRS": srs_str,
             "1st": int(r["first_downs"]) if pd.notna(r["first_downs"]) else "-",
             "Plays": int(r["plays"]) if pd.notna(r["plays"]) else "-",
             "Yards": int(r["yards"]) if pd.notna(r["yards"]) else "-",
@@ -428,6 +477,7 @@ def main():
         game_stats = None if view_by == "Predictions" else season_game_stats(season)
         week = None
         team_filter = None
+        qb_through_week = None
         if view_by == "Team":
             teams_available = sorted(
                 set(season_games["home_team"]).union(season_games["away_team"]),
@@ -447,9 +497,30 @@ def main():
                 index=weeks_available.index(default_week) if default_week in weeks_available else 0,
             )
             if st.button("📈 QB chart", use_container_width=True,
-                         help="EPA/dropback vs catch% scatter as of the selected "
-                              "week, colored by Game Performance Score"):
+                         help="EPA/dropback vs catch% scatter, colored by "
+                              "Game Performance Score"):
                 st.session_state["show_qb_chart"] = not st.session_state.get("show_qb_chart", False)
+
+            if st.session_state.get("show_qb_chart"):
+                # Deliberately its own control, decoupled from the "Week"
+                # selectbox above: that one drives which games are LISTED,
+                # this one drives which games are COUNTED into the QB
+                # stats. Conflating the two was the source of the chart
+                # looking "broken" -- picking Week 3 games showed QB stats
+                # that didn't yet include week 3 (the no-leakage shift used
+                # for predictions leaking into a view that has no leakage
+                # concern). "Current" always resolves to the latest week
+                # with final scores, so it's the one that self-updates as
+                # games finish -- pick this after a game to see it reflected.
+                qb_week_options = ["Current"] + [str(w) for w in weeks_available]
+                qb_week_choice = st.selectbox(
+                    "QB chart: through week", qb_week_options, index=0,
+                    key="qb_chart_week_choice",
+                    help="Which games count toward the QB stats plotted. "
+                         "\"Current\" = through the most recent final score.",
+                )
+                qb_through_week = (latest_completed_week(games, season)
+                                   if qb_week_choice == "Current" else int(qb_week_choice))
 
         show_preds = False
         if view_by != "Predictions":
@@ -489,7 +560,9 @@ def main():
         )
         st.dataframe(pred_df, hide_index=True, use_container_width=True)
         if st.session_state.get("show_qb_chart"):
-            render_qb_chart(season, week)
+            # Match the model's own no-leakage info set: predictions for
+            # week `week` only ever see games through week-1.
+            render_qb_chart(season, max(week - 1, 0))
         st.caption(
             f"away_srs/home_srs: opponent-adjusted team rating in points "
             f"(0 = league average; HFA {HFA_POINTS:+.1f}, win-prob std {MARGIN_STD:.1f}). "
@@ -534,8 +607,8 @@ def main():
     else:
         shown_games = season_games[season_games["week"] == week].copy()
         st.caption(f"Season {season}, Week {week} — {len(shown_games)} games")
-        if st.session_state.get("show_qb_chart"):
-            render_qb_chart(season, week)
+        if st.session_state.get("show_qb_chart") and qb_through_week is not None:
+            render_qb_chart(season, qb_through_week)
 
     # Team jump grid: one colored button per team, no scrolling needed
     st.markdown("---")
@@ -551,16 +624,61 @@ def main():
     shown_games["gameday"] = pd.to_datetime(shown_games["gameday"])
     shown_games = shown_games.sort_values(["week", "gameday", "gametime"])
 
+    # Always computed (not just under show_preds): the box-score table's SRS
+    # column wants it regardless of whether the prediction row is attached.
+    srs_ratings = cached_srs_ratings(season)
+
     pred_by_id = None
     qb_df = None
     if show_preds:
-        pred_by_id = detail_for_games(shown_games, cached_srs_ratings(season)).set_index("game_id")
+        pred_by_id = detail_for_games(shown_games, srs_ratings).set_index("game_id")
         qb_df = cached_qb_epa_asof(season)
 
     export_df = game_stats[game_stats["game_id"].isin(shown_games["game_id"])].copy()
     export_df.insert(0, "season", season)
     export_df.insert(3, "team_name", export_df["team"].map(names))
     export_df.insert(5, "opp_name", export_df["opp"].map(names))
+
+    # SRS as-of that game's week (no leakage) -- same number now shown on
+    # every box-score card, so the export always carries it too.
+    export_df["srs"] = export_df.apply(
+        lambda r: srs_ratings.get((season, r["week"]), {}).get(r["team"]), axis=1
+    ).round(3)
+
+    if show_preds:
+        # Mirror the "Attach prediction row to games" toggle in the CSV --
+        # previously this toggle changed only the on-screen cards and the
+        # download stayed the box-score-only columns no matter what.
+        gcols = pred_by_id[["home", "pred_margin", "spread_line", "edge", "home_win_prob",
+                            "pred_winner", "away_qb", "home_qb"]].reset_index()
+        export_df = export_df.merge(gcols, on="game_id", how="left")
+        is_home = export_df["team"] == export_df["home"]
+        # model_line / market_line: standard sportsbook notation, per-team --
+        # favorite negative, underdog positive (what you'd actually see
+        # typed into DraftKings for that team), same convention line_string()
+        # already uses for the on-screen "model BUF -3.4" text.
+        export_df["model_line"] = (-export_df["pred_margin"]).where(is_home, export_df["pred_margin"]).round(2)
+        export_df["market_line"] = (-export_df["spread_line"]).where(is_home, export_df["spread_line"])
+        # edge is NOT a spread, so it intentionally does NOT follow the same
+        # flip -- it's a value signal (positive = model likes THIS ROW'S
+        # team more than the market does), so edge != model_line -
+        # market_line by design. Flipping it the same way as the display
+        # lines would invert its meaning on every favorite's row (a
+        # favorite's positive-market/negative-model gap would read as
+        # "value here" when the value is actually on the underdog).
+        export_df["edge"] = export_df["edge"].where(is_home, -export_df["edge"]).round(2)
+        export_df["win_prob"] = export_df["home_win_prob"].where(is_home, 1 - export_df["home_win_prob"]).round(3)
+        export_df["model_favors_team"] = export_df["team"] == export_df["pred_winner"]
+        export_df["qb_name"] = export_df["away_qb"].where(~is_home, export_df["home_qb"])
+        qb_stats = export_df.apply(
+            lambda r: pd.Series(qb_lookup(qb_df, r["week"], r["qb_name"]),
+                                index=["qb", "qb_epa_db", "qb_catch_pct"]),
+            axis=1,
+        )
+        export_df = pd.concat([export_df, qb_stats], axis=1)
+        export_df = export_df.drop(columns=["home", "pred_margin", "spread_line",
+                                            "away_qb", "home_qb", "qb_name"])
+
     export_scope = names.get(team_filter, team_filter) if view_by == "Team" else f"week{week}"
     st.sidebar.download_button(
         "⬇️ Download this view (CSV)",
@@ -569,7 +687,8 @@ def main():
         mime="text/csv",
         help="Every stat shown on the scoreboard cards, for exactly the games "
              "currently on screen -- handy for a groupby/mean in pandas or "
-             "handing to Claude Code.",
+             "handing to Claude Code. Includes model/market/QB columns when "
+             "\"Attach prediction row to games\" is on.",
         use_container_width=True,
     )
 
@@ -607,6 +726,11 @@ def main():
                 model_line = line_string(game.home_team, game.away_team, p["pred_margin"])
                 market_line = (line_string(game.home_team, game.away_team, p["spread_line"])
                                if pd.notna(p["spread_line"]) else "-")
+                # edge in the same "TEAM -X.X" notation as model/market: which
+                # team the model likes MORE than the market credits them, and
+                # by how much (edge = model line minus market line).
+                edge_line = (line_string(game.home_team, game.away_team, p["edge"])
+                            if pd.notna(p["edge"]) else "-")
                 win_pct = 100 * max(p["home_win_prob"], 1 - p["home_win_prob"])
                 right = ""
                 if final:
@@ -616,12 +740,15 @@ def main():
                     f"🔮 SRS {game.away_team} **{p['away_srs']:+.1f}** @ "
                     f"{game.home_team} **{p['home_srs']:+.1f}** · "
                     f"model **{model_line}** · market **{market_line}** · "
+                    f"edge **{edge_line}** · "
                     f"pred **{p['pred_winner']}** {win_pct:.0f}%{right}"
                 )
 
             if final:
+                week_ratings = srs_ratings.get((season, game.week), {})
                 st.table(
-                    stats_table(game_stats, game.game_id, game.away_team, game.home_team, away_label, home_label)
+                    stats_table(game_stats, game.game_id, game.away_team, game.home_team,
+                               away_label, home_label, week_ratings)
                 )
 
 
