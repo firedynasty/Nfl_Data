@@ -69,11 +69,19 @@ def cached_team_names() -> dict[str, str]:
     return dict(zip(latest["team"], latest["nickname"]))
 
 
+@st.cache_data(show_spinner=False)
+def cached_pbp(season: int) -> pd.DataFrame:
+    """Shared across every caller in this app so the same season's
+    play-by-play is downloaded/parsed once, not once per @st.cache_data
+    function that happens to need it."""
+    return load_pbp(season)
+
+
 @st.cache_data(show_spinner="Loading play-by-play for this season...")
 def season_game_stats(season: int) -> pd.DataFrame:
     """One row per team-game: efficiency, turnover margin, and red zone stats."""
     games = cached_games()
-    pbp = load_pbp(season)
+    pbp = cached_pbp(season)
     long = build_long_results(games, [season])
 
     eff = plays_yards_by_team_game(pbp)
@@ -130,7 +138,7 @@ def cached_qb_epa_asof(season: int) -> pd.DataFrame:
     cur = None
     last_team = {}
     try:
-        pbp = load_pbp(season)
+        pbp = cached_pbp(season)
         db = pbp[(pbp["qb_dropback"] == 1) & pbp["passer_player_name"].notna()]
         last_team = (db.sort_values("week").groupby("passer_player_name")["posteam"]
                      .last().to_dict())  # for chart display; latest team if traded
@@ -163,7 +171,7 @@ def cached_qb_epa_asof(season: int) -> pd.DataFrame:
 
     prior_epa, prior_catch = {}, {}
     try:
-        pbp_prev = load_pbp(season - 1)
+        pbp_prev = cached_pbp(season - 1)
         db_prev = pbp_prev[(pbp_prev["qb_dropback"] == 1)
                            & pbp_prev["passer_player_name"].notna()]
         tot = db_prev.groupby("passer_player_name").agg(
