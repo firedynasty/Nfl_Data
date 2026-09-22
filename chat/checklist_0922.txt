@@ -1,0 +1,114 @@
+"""
+Checklist -- debugging a Streamlit app that deploys but doesn't work
+(or won't deploy at all).
+
+Extracted from chat/debug0922.txt: same techniques, generalized so
+they're reusable on a future app instead of tied to one incident's
+specific package versions. Three techniques, each with the actual
+commands, not just the principle.
+"""
+
+0. FIRST: read the deploy log for the actual resolved versions.
+
+Streamlit Cloud (and most PaaS deploy logs) print every package it
+installed, e.g.:
+    + pandas==3.0.6
+    + altair==5.5.0
+Don't guess versions -- copy these exact numbers into the checks below.
+If there's no requirements.txt yet, this log IS your baseline: it's
+whatever "latest" resolved to on the day of that deploy, which silently
+drifts every time the platform reinstalls (new Streamlit Cloud sessions
+routinely rebuild the venv from scratch).
+
+
+1. READ PACKAGE METADATA -- don't guess whether two pins are compatible,
+   or whether a package supports your Python version. Check.
+
+Download the wheel without installing it, then read its METADATA file
+(this is where Requires-Python and Requires-Dist / dependency
+constraints live):
+
+    pip download PACKAGE==VERSION --no-deps -d /tmp/pkgcheck
+    python3 -c "
+import zipfile, glob
+f = glob.glob('/tmp/pkgcheck/*.whl')[0]
+z = zipfile.ZipFile(f)
+meta = [n for n in z.namelist() if n.endswith('METADATA')][0]
+print(z.read(meta).decode())
+"
+
+What to grep for in the output:
+  - `Requires-Python:`               -- does it support the runtime's
+                                         Python version at all?
+  - `Requires-Dist: <other-package>`  -- version constraints on things
+                                         you're also pinning (e.g.
+                                         `altair<7,>=5.0.0` tells you
+                                         instantly whether your altair
+                                         pin is even legal under your
+                                         streamlit pin)
+  - Conditional markers like
+    `typing-extensions>=4.10.0; python_version < '3.14'` -- these are
+    the sneaky ones: a package can silently drop a real dependency for
+    newer Python versions, on the assumption that stdlib now covers it.
+    That assumption is exactly what broke in this session (altair 5.5.0
+    assumed Python 3.14's stdlib typing.TypedDict covered what it
+    needed; it didn't).
+
+To see what versions exist at all before picking one:
+    pip index versions PACKAGE
+
+
+2. REPRODUCE IN A THROWAWAY VENV -- before editing app code to fix an
+   error you've only seen in someone else's deploy log, get the same
+   error on your own machine, minimally.
+
+    python3 -m venv /tmp/repro
+    /tmp/repro/bin/pip install -q PACKAGE==VERSION
+    /tmp/repro/bin/python -c "<smallest possible script that triggers it>"
+
+The goal is the SMALLEST reproduction, not running the whole app.
+In this session: not "run streamlit_scoreboard.py under pandas 3.0.6"
+but "reindex a two-column DataFrame with fill_value=0" -- five lines,
+same TypeError, isolates the exact broken call instead of a broken app.
+Delete the venv when done; it's disposable (`rm -rf /tmp/repro`).
+
+If a repro isn't practical (e.g. the failure needs the exact platform,
+like a specific OS/Python build), fall back to step 1 -- metadata alone
+often proves the point (this session's altair/Python-3.14 crash was
+diagnosed from metadata, not reproduced locally, because no local
+Python 3.14 was available).
+
+
+3. VERIFY CLAIMS BEFORE ACTING ON THEM -- including claims from deploy
+   logs, error messages, pasted advice (your own past answers, another
+   AI's answer, a forum post), and especially your own prior guesses.
+
+A claim is not evidence until you've checked it against something you
+can see directly: the package's own METADATA (step 1), a reproduction
+(step 2), or the actual log output. In this session:
+  - A pasted analysis claimed pyarrow 25.0.1 has a "known segfault" and
+    recommended pinning pyarrow<25. Checked against the actual first
+    deploy log: pyarrow==25.0.1 had already installed and run without
+    issue. Didn't add the pin.
+  - Later logs DID show Streamlit Cloud replacing pyarrow 25.0.1 with
+    24.0.0 on its own -- but only in deploys that installed from a
+    requirements.txt. Assuming that behavior was unconditional (an
+    easy assumption to make from a single log) would have been wrong;
+    caught on a later re-read of the logs side by side.
+Rule of thumb: if a claim would change what you're about to do, spend
+one command confirming it first. It's cheaper than reverting a fix for
+a problem that wasn't real, or missing one that was.
+
+
+WHEN NONE OF THIS EXPLAINS IT
+------------------------------
+- Diff the deploy log's installed-package list against a known-working
+  deploy's list (this session's 15:45 log vs. the later ones) --
+  version drift between two deploys is often the whole story.
+- Check whether the platform's OWN runtime changed (Python version,
+  base image) independent of anything in your repo -- Streamlit Cloud
+  bumped to Python 3.14 mid-session here with no action on our end.
+- Cold-start vs. warm behavior can differ a lot for apps with caching
+  (st.cache_data, etc.): a "works for me" report after the app's been
+  running a while doesn't rule out a slow/broken first load right after
+  a redeploy. Test right after a fresh deploy/reboot, not just later.

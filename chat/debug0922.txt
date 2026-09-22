@@ -1,0 +1,133 @@
+"""
+Session log -- 2026-09-22, streamlit.app deploy debugging (nflseasondata.streamlit.app).
+
+Recorded the same way this repo already documents itself (top-of-file
+docstrings, intermediate/qa_log.md, chat/2026-09-21.md): what changed and
+why, not a turn-by-turn transcript. Two files touched this session:
+requirements.txt (new) and streamlit_scoreboard.py. Commits, in order:
+d8455cd, 2101a91, 4600512, 9ea6742.
+"""
+
+FILES TOUCHED
+-------------
+requirements.txt      -- created, then revised twice (items 3-5 below).
+streamlit_scoreboard.py -- reindex dtype fix (item 2) and pbp caching fix (item 6).
+
+
+0. "Why wasn't week 3, 2026 in the QB chart" -- not a bug.
+
+Checked the 2026 schedule (games.csv from nflverse). Week 3 runs
+2026-09-24 through 2026-09-28; the question was asked 2026-09-22, so week 2
+(finished 2026-09-21) was simply the most recent complete week when the
+chart/CSV pipeline (build_qb_csv.py -> team_composite.py ->
+qb_support_chart.py) was last run. No code change; rerun after week 3
+finishes to pick it up.
+
+
+1-2. streamlit.app QB chart was empty: "couldn't load 2026 play-by-play
+     (Invalid value '0' for dtype 'str'. Value should be a string or
+     missing value, got 'int' instead.)"
+
+Root cause: no requirements.txt existed anywhere in the repo, so
+Streamlit Cloud resolved latest pandas (3.0.6) while local dev runs
+pandas 2.x (2.2.2 in the `test` conda env, 2.3.3 in the anaconda base
+env). Pandas 3.0 made string columns strict (no more silently coercing
+ints into them). cached_qb_epa_asof() in streamlit_scoreboard.py built a
+per-QB frame still carrying the passer_player_name string column, then
+did:
+    grp.set_index("week").reindex(range(1, 23), fill_value=0)
+Pandas 2.x tolerated filling that string column with int 0 (object
+dtype); pandas 3.0's strict string dtype raises the exact error above.
+Reproduced by installing pandas 3.0.6 in a scratch venv and isolating the
+minimal repro (reindex a DataFrame with a string column + fill_value=0).
+
+Fix (streamlit_scoreboard.py): drop the passer_player_name column before
+the reindex -- it's reassigned right after anyway (`grp["passer_player_name"]
+= qb`), so this sidesteps the dtype issue regardless of pandas version.
+
+
+3. Added requirements.txt, pinned to match the local anaconda base env
+   (the one `streamlit run streamlit_scoreboard.py` actually works in):
+   streamlit==1.43.2, altair==5.5.0, numpy==2.4.6, pandas==2.3.3.
+   Verified these are the only external deps (everything else the app
+   imports is stdlib or local modules: nfl_box_score_analysis, predict_week,
+   srs, backtest_srs, team_composite).
+
+
+4. Deploy crashed on `import altair as alt`:
+   TypeError: _TypedDictMeta.__new__() got an unexpected keyword argument
+   'closed' (during altair's own schema/_config.py import).
+
+Streamlit Cloud's runtime is Python 3.14.7 (an unpinned first deploy
+earlier in the day had already proven the app runs fine on 3.14 with
+whatever gets auto-resolved -- altair 6.3.0, streamlit 1.64.0). Checked
+wheel METADATA directly: altair==5.5.0 declares
+`typing-extensions>=4.10.0; python_version < '3.14'` -- for 3.14+ it
+assumes stdlib typing.TypedDict alone covers the closed-TypedDict
+features (PEP 728) it needs, and that assumption is wrong on this
+runtime. altair==6.3.0's METADATA correctly extends the typing-extensions
+requirement up to `python_version < '3.15'`, i.e. it actually supports
+3.14. Confirmed the app's own altair usage (Chart/encode/X/Y/Color/
+Tooltip/mark_rule/mark_text) is all stable API unaffected by the 5->6
+bump. Fix: bumped the requirements.txt pin to altair==6.3.0.
+
+
+5. Same crash reappeared after the altair bump -- because streamlit==1.43.2
+   constrains altair<6, so pinning altair==6.3.0 alongside it was an
+   unsatisfiable combination; the install failed outright and the old
+   broken altair 5.5.0 environment was left in place.
+
+Verified via wheel METADATA that streamlit==1.64.0 allows
+`altair!=5.4.0,!=5.4.1,<7,>=5.0.0` (so 6.3.0 resolves cleanly under it),
+and that its numpy<3 / pandas<4 constraints are already satisfied by the
+existing numpy==2.4.6 / pandas==2.3.3 pins -- no need to touch those.
+Did NOT add the `pyarrow<25` pin a pasted third-party analysis suggested
+("known segfault workaround") -- the very first, unpinned deploy had
+already installed pyarrow==25.0.1 and run fine, contradicting that claim.
+CORRECTION (caught by the same third party on review): the next deploy's
+log did show "Detected pyarrow 25.0.1 (known segfault, apache/arrow#50471).
+Replacing with pyarrow<25" -> installed 24.0.0, but that step only appears
+in deploys that install from a requirements.txt -- the 15:45 deploy, before
+one existed, installed pyarrow==25.0.1 directly with no such message. So
+this guard is NOT unconditional; it's tied to the requirements.txt install
+path. Doesn't change what we did (still didn't need to pin pyarrow
+ourselves), just corrects the earlier over-broad claim.
+
+Fix: bumped requirements.txt to streamlit==1.64.0. Final pins:
+    streamlit==1.64.0
+    altair==6.3.0
+    numpy==2.4.6
+    pandas==2.3.3
+This deploy succeeded cleanly (all 38 packages installed, Uvicorn started,
+no errors).
+
+
+6. "Everything installed but takes forever to load" (after the successful
+   deploy above -- a runtime perf issue, not a deploy failure).
+
+load_pbp() (nfl_box_score_analysis.py) itself was never cached -- only
+the two @st.cache_data functions that call it were. season_game_stats()
+and cached_qb_epa_asof() each independently call load_pbp(season) for the
+CURRENT season, and cached_qb_epa_asof() also calls it for season-1. On a
+cold cache (every redeploy/restart resets @st.cache_data), that's the
+current season's play-by-play CSV downloaded + parsed from GitHub TWICE,
+plus last season's a third time, before the page renders -- the actual
+source of the slow first load.
+
+Fix: added a shared cached_pbp(season) wrapper (@st.cache_data) in
+streamlit_scoreboard.py and routed both call sites through it, so each
+season's play-by-play is fetched/parsed once and reused. Cuts cold-load
+pbp fetches from 3 to 2 (current season once instead of twice; prior
+season still once). Does not change warm-load behavior (st.cache_data
+already persisted across reruns/visitors within a running instance) --
+only the redeploy-triggered cold start was doing the extra work.
+
+
+DISCUSSED, NOT BUILT THIS SESSION
+----------------------------------
+- The pre-existing st.segmented_control "view_by" session-state warning
+  (default= passed alongside key= that's also set via session state
+  elsewhere) -- surfaced in deploy logs, confirmed harmless/version-
+  independent, offered a one-line fix (drop default=, seed
+  st.session_state.view_by before the widget instead) but not applied --
+  user didn't ask for it in this session.
