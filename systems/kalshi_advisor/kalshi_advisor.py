@@ -288,8 +288,12 @@ def load_yahoo_signals():
     latest = ml.groupby("matchup")["scraped_at"].transform("max")
     ml = ml[ml["scraped_at"] == latest]
 
+    # oldest-scraped matchup first, so a team's current game overwrites its
+    # older (possibly already-final) ones instead of whichever sorts last
+    # alphabetically winning.
+    ml = ml.sort_values("scraped_at")
     out = {}
-    for matchup, grp in ml.groupby("matchup"):
+    for matchup, grp in ml.groupby("matchup", sort=False):
         sides = []
         for _, r in grp.iterrows():
             sm = ML_SIDE_RE.match(str(r["side"]).strip())
