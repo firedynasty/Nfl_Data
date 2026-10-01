@@ -180,7 +180,13 @@ def append_to_log(detail, path=LOG_PATH):
                             how="left")
         dups = int(fresh["_dup"].sum())
         fresh = fresh[fresh["_dup"].isna()].drop(columns=["_dup"])
-        fresh.to_csv(path, mode="a", header=False, index=False)
+        if list(fresh.columns) == list(existing.columns):
+            fresh.to_csv(path, mode="a", header=False, index=False)
+        else:
+            # schema changed (a column was added/reordered): a headerless
+            # append would shift every new row under the old header, so
+            # rewrite the whole file with the union of columns instead.
+            pd.concat([existing, fresh], ignore_index=True).to_csv(path, index=False)
     else:
         dups = 0
         fresh.to_csv(path, index=False)
