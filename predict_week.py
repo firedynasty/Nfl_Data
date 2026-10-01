@@ -75,13 +75,22 @@ def team_nicknames():
 
 
 def current_season_week(games):
-    """Latest season; the most recent week that has kicked off (so the
-    default is 'this week', including in-progress games in it)."""
+    """Latest season; the week currently in progress, or the NEXT week once
+    the last one is fully final (so on a Thursday morning before kickoff the
+    default is the week that starts tonight, not the one that just ended)."""
     season = int(games["season"].max())
     sub = games[games["season"] == season].copy()
     sub["gameday"] = pd.to_datetime(sub["gameday"])
     started = sub[sub["gameday"] <= pd.Timestamp.now()]
-    return season, (int(started["week"].max()) if len(started) else 1)
+    if not len(started):
+        return season, 1
+    week = int(started["week"].max())
+    last = sub[sub["week"] == week]
+    done = last.dropna(subset=["home_score", "away_score"])
+    later = sub[sub["week"] > week]
+    if len(done) == len(last) and len(later):
+        week = int(later["week"].min())
+    return season, week
 
 
 def line_string(home, away, margin_home_pos):
@@ -92,18 +101,20 @@ def line_string(home, away, margin_home_pos):
     return f"{fav} -{pts:.1f}"
 
 
-def detail_for_games(sched, ratings):
+def detail_for_games(sched, ratings, hfa_points=HFA_POINTS, margin_std=MARGIN_STD):
     """One detail row per game for ANY subset of the schedule (played or
     not): both SRS ratings, predicted margin, win prob, market line, edge.
     Single source of truth for the CLI sheet, the app's Predictions view,
-    the app's attach-to-cards mode, and the live log."""
+    the app's attach-to-cards mode, and the live log. hfa_points/margin_std
+    are parameters (defaulting to the NFL constants) so predict_cfb_week.py
+    can reuse this with its own college-estimated constants."""
     detail = []
     for g in sched.itertuples():
         r = ratings[(int(g.season), int(g.week))]
         neutral = getattr(g, "location", "Home") == "Neutral"
-        hfa = 0.0 if neutral else HFA_POINTS
+        hfa = 0.0 if neutral else hfa_points
         margin = r[g.home_team] - r[g.away_team] + hfa  # home-positive
-        wp_home = normal_cdf(margin / MARGIN_STD)
+        wp_home = normal_cdf(margin / margin_std)
         pred_home = wp_home >= 0.5
         spread = g.spread_line if pd.notna(g.spread_line) else None
         played = pd.notna(g.home_score)
@@ -126,7 +137,8 @@ def detail_for_games(sched, ratings):
     return pd.DataFrame(detail)
 
 
-def build_week_table(games, season, week, ratings, k, shrink, names=None):
+def build_week_table(games, season, week, ratings, k, shrink, names=None,
+                     hfa_points=HFA_POINTS, margin_std=MARGIN_STD):
     """(display_df, detail_df) for one season/week: the printable sheet,
     plus one row per game with everything the live log/grader needs."""
     names = names or {}
@@ -135,7 +147,7 @@ def build_week_table(games, season, week, ratings, k, shrink, names=None):
         sys.exit(f"no games found for season {season} week {week}")
     sched["gameday"] = pd.to_datetime(sched["gameday"])
     sched = sched.sort_values(["gameday", "gametime"])
-    detail = detail_for_games(sched, ratings)
+    detail = detail_for_games(sched, ratings, hfa_points, margin_std)
 
     rows = []
     for d in detail.itertuples():
@@ -164,13 +176,13 @@ def build_week_table(games, season, week, ratings, k, shrink, names=None):
     return pd.DataFrame(rows), detail
 
 
-def append_to_log(detail, path=LOG_PATH):
+def append_to_log(detail, path=LOG_PATH, model_version=MODEL_VERSION):
     """Phase 6 logging discipline: only games that haven't kicked off yet
     (logging a played game would be post-hoc), and never the same
     (season, week, version, game) twice. Append-only after that."""
     fresh = detail[~detail["already_played"]].drop(columns=["already_played"]).copy()
     skipped = int(detail["already_played"].sum())
-    fresh["model_version"] = MODEL_VERSION
+    fresh["model_version"] = model_version
     fresh["logged_at"] = pd.Timestamp.now().isoformat(timespec="seconds")
 
     if os.path.exists(path):
@@ -190,7 +202,7 @@ def append_to_log(detail, path=LOG_PATH):
     else:
         dups = 0
         fresh.to_csv(path, index=False)
-    print(f"\nLogged {len(fresh)} predictions to {path} (model_version={MODEL_VERSION})"
+    print(f"\nLogged {len(fresh)} predictions to {path} (model_version={model_version})"
           + (f" | skipped {skipped} already-played" if skipped else "")
           + (f" | skipped {dups} already-logged" if dups else ""))
 
