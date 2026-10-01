@@ -42,6 +42,15 @@ def load_games():
     return pd.read_csv(GAMES_URL)
 
 
+import os  # noqa: E402
+import sys  # noqa: E402
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "shared"))
+# build_long_results moved to shared/srs.py (it's sport-agnostic; the
+# college pipeline uses it too). Re-exported here so existing
+# `from nfl_box_score_analysis import build_long_results` lines keep working.
+from srs import build_long_results  # noqa: E402,F401
+
+
 def load_pbp(season):
     return pd.read_csv(PBP_URL_TMPL.format(season=season), compression="gzip", low_memory=False)
 
@@ -55,31 +64,6 @@ def load_pbp_multi(seasons, tag=""):
         print(f"  loaded {s} play-by-play{label} ({len(pbp)} plays)", file=sys.stderr)
     return pd.concat(frames, ignore_index=True)
 
-
-def build_long_results(games, seasons):
-    """Reshape games.csv (one row per game) into one row per team per game,
-    with a W/L/T result column."""
-    g = games.dropna(subset=["home_score", "away_score"]).copy()
-    g["season"] = g["season"].astype(int)
-    g = g[g["season"].isin(seasons)]
-
-    cols = ["game_id", "season", "week", "home_team", "away_team", "home_score", "away_score"]
-    home = g[cols].copy()
-    home["team"], home["opp"] = home["home_team"], home["away_team"]
-    home["team_score"], home["opp_score"] = home["home_score"], home["away_score"]
-
-    away = g[cols].copy()
-    away["team"], away["opp"] = away["away_team"], away["home_team"]
-    away["team_score"], away["opp_score"] = away["away_score"], away["home_score"]
-
-    long = pd.concat([home, away], ignore_index=True)[
-        ["game_id", "season", "week", "team", "opp", "team_score", "opp_score"]
-    ]
-    long["result"] = long.apply(
-        lambda r: "W" if r.team_score > r.opp_score else ("L" if r.team_score < r.opp_score else "T"),
-        axis=1,
-    )
-    return long
 
 
 def print_summary_table(title, merged, value_cols, seasons):

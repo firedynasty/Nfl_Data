@@ -3,24 +3,35 @@
 Every file in this repo, what it does, and the order the pipeline was built
 in. Newest work first in the listing, then the story in build order.
 
+**Layout (Oct 1, 2026 restructure):** the repo now covers two sports, so
+files live under `shared/` (sport-agnostic math: `srs.py`,
+`backtest_common.py`), `nfl/` (everything NFL, including `systems/`,
+`intermediate/`, `chat/`, and the legacy exploration files), and `ncaa/`
+(the college pipeline). Run scripts from inside their sport folder.
+`nfl/backtest_srs.py` re-exports the moved `backtest_common` names and
+`nfl/nfl_box_score_analysis.py` re-exports `build_long_results`, so old
+import lines keep working. NOTE: the streamlit.app deploy's entry file is
+now `nfl/streamlit_scoreboard.py` — update it in the Streamlit Cloud
+settings.
+
 ## College football (added Oct 1, 2026)
 
 Same SRS pipeline as the NFL, pointed at college. nflverse doesn't cover
 college, so scores come from ESPN's public scoreboard API instead; the math
-(`srs.py`, `backtest_srs.py`) is reused unchanged.
+(`srs.py`, `backtest_common.py`) is reused unchanged.
 
-- **`cfb_games.py`** — the `load_games()` equivalent for FBS college
+- **`ncaa/cfb_games.py`** — the `load_games()` equivalent for FBS college
   football. Fetches 2021-present from ESPN (`groups=80`), shapes rows
   exactly like nflverse's games.csv, drops sub-FBS crossover games, caches
   to `cfb_games_cache.csv` (past seasons cached; current season re-fetched
   every load). `python cfb_games.py` to refresh.
-- **`backtest_cfb.py`** — honest walk-forward backtest (2022-2026, no
-  leakage), reusing `backtest_srs.py`'s machinery. Estimated the college
+- **`ncaa/backtest_cfb.py`** — honest walk-forward backtest (2022-2026, no
+  leakage), reusing `backtest_common`. Estimated the college
   constants: **k=6, shrink=0.7** (MAE sweep), **HFA 3.77**, **margin std
   16.66**. Result: 70% winners straight up, Brier 0.188 — better than the
   NFL model because college favorites win more often. Same rule: ranks
   teams, doesn't claim to beat the market.
-- **`predict_cfb_week.py`** — the college `predict_week.py`. Same sheet,
+- **`ncaa/predict_cfb_week.py`** — the college `predict_week.py`. Same sheet,
   same `--log` discipline, writes **`cfb_predictions_log.csv`**
   (model_version `cfb-srs-v1`). `--team ND` filters to one team.
   `predict_week.py`'s `detail_for_games`/`build_week_table` now take
@@ -30,6 +41,7 @@ college, so scores come from ESPN's public scoreboard API instead; the math
 - The markets repo's `edge.py` reads both logs: NFL tickers get the NFL
   model %, `KXNCAAFGAME` tickers get this one, via `CFB_PREDICTIONS_LOG`.
 
+## The NFL pipeline (everything below now lives in `nfl/`)
 ```
 -rw-r--r--  1 stanleytan  staff   3698 Sep 16 12:45 qb_support_chart.py
 -rw-r--r--  1 stanleytan  staff   5498 Sep 16 12:30 game_performance_score.csv

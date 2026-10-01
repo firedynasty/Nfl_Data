@@ -24,9 +24,13 @@ import sys
 
 import pandas as pd
 
+import os as _os
+import sys as _sys
+_sys.path.insert(0, _os.path.join(_os.path.dirname(__file__), "..", "shared"))
+
 from cfb_games import load_cfb_games
 from srs import blended_asof_ratings
-from backtest_srs import collect_predictions, estimate_hfa, grade
+from backtest_common import collect_predictions, estimate_hfa, grade
 
 BACKTEST_SEASONS = [2022, 2023, 2024, 2025, 2026]
 

@@ -1,0 +1,10 @@
+Verified working in a live browser test. Here's what changed in streamlit_scoreboard.py:
+
+1. New "QB chart: through week" selector — decoupled from the main "Week" games-list selector, with options Current + each week number. This was the actual bug: the chart used to silently reuse the main week picker's value against data that's shifted by one week (built for no-leakage predictions), so "Week 2" showed only week-1 stats — looked broken.
+2. qb_chart_frame/render_qb_chart now take through_week (inclusive, plain-English) and do the shift translation internally, so every caller just says "through week N."
+3. latest_completed_week() helper — what Current resolves to (max week with a final
+4. Predictions tab now explicitly passes week - 1 to keep the chart matching the modet (previouslyaccidental, now intentional).
+5. Error surfacing —rk hiccup, nflversenot yet published) now shows st.warning(...) instead of silentrendering as "no distinguishable from a real empty state and is likely the other half of "sometimes doesn't work."
+6. Better empty-state message naming the threshold and suggesting Current/an earlie
+                                                              Tested live: Currenteek 2 (today's latest final); picking 3 (tomorrow's game, not yet played) correctly showed identical-to-roring or goingblank; picking 1 showed a genuinely different, earlier snapshot. All three cases work
+

@@ -32,6 +32,12 @@ import argparse
 
 import pandas as pd
 
+import os as _os
+import sys as _sys
+_here = _os.path.dirname(__file__)
+_sys.path.insert(0, _os.path.join(_here, "..", "shared"))
+_sys.path.insert(0, _os.path.join(_here, "..", "nfl"))
+
 from cfb_games import load_cfb_games
 from srs import blended_asof_ratings
 from predict_week import build_week_table, append_to_log, current_season_week

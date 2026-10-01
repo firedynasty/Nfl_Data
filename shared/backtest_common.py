@@ -1,35 +1,19 @@
 """
-Walk-forward backtest harness for SRS predictions (Phase 5 of the plan).
+backtest_common.py -- the sport-agnostic half of backtest_srs.py.
 
-ROUGH VERSION, deliberately leaky: ratings are season-TOTAL SRS — the
-rating has already seen the games it's predicting, so every number here
-is optimistic. Phase 2's as-of-date SRS plugs into the same harness via
-the `rating_fn(season, week)` hook, and the delta between the two runs is
-exactly the cost of the leakage.
+Everything here works off a games table shaped like nflverse's games.csv
+(game_id, season, week, home_team, away_team, home_score, away_score,
+location, spread_line), so the NFL backtest (nfl/backtest_srs.py) and the
+college one (ncaa/backtest_cfb.py) share one implementation. The only
+leakage-sensitive piece anywhere is the caller's rating_fn(season, week).
 
-Per game it produces: predicted home margin (SRS diff + estimated HFA,
-0 on neutral sites), win probability (normal CDF, std estimated from the
-backtest's own residuals — the Phase 3/5 circular calibration the plan
-calls for), edge vs the market's spread_line, and grades: win accuracy,
-Brier score, ATS cover rate bucketed by |edge| (bet = the side the edge
-points to, per the decided betting rule), plus the user's |edge| >= rule.
-
-USAGE
------
-  python backtest_srs.py                        # 2021-2025 pooled, LEAKY rough read
-  python backtest_srs.py --asof                 # the honest version (Phase 2 ratings)
-  python backtest_srs.py --seasons 2023 2024 --asof
-  python backtest_srs.py --cap 24 --rule 4
+nfl/backtest_srs.py re-exports these names, so existing
+`from backtest_srs import ...` lines keep working.
 """
 
-import argparse
 import math
-import sys
 
 import pandas as pd
-
-from nfl_box_score_analysis import load_games, build_long_results
-from srs import game_margins, solve_srs, blended_asof_ratings
 
 # Standard -110 odds on both sides of a spread bet: you must win ~52.38%
 # of bets just to break even after the vig. Named per the plan so no
@@ -41,14 +25,6 @@ EDGE_BUCKETS = [(0, 1), (1, 2), (2, 3), (3, 99)]  # |edge|, points
 
 def normal_cdf(x):
     return 0.5 * (1 + math.erf(x / math.sqrt(2)))
-
-
-def season_total_ratings(games, seasons, cap=None):
-    """The leaky stub: one rating per team per SEASON, computed from every
-    game in that season including the ones being predicted. Phase 2
-    replaces this with week-as-of ratings behind the same shape."""
-    long = build_long_results(games, list(seasons))
-    return {s: solve_srs(game_margins(long, s, cap=cap))[0] for s in seasons}
 
 
 def estimate_hfa(season_games):
@@ -166,44 +142,3 @@ def report(df, ats, seasons, hfa_text, std_text, rule_edge, mode, footer=None):
         print("\nNo leakage: every rating uses only games before the predicted "
               "week. (HFA/std are still fit on this window -- the plan's "
               "circular calibration; blend constants k/shrink untuned.)")
-
-
-def main():
-    p = argparse.ArgumentParser(description="SRS walk-forward backtest")
-    p.add_argument("--seasons", nargs="+", type=int, default=[2021, 2022, 2023, 2024, 2025])
-    p.add_argument("--cap", type=float, default=None, help="margin cap for SRS (see srs.py)")
-    p.add_argument("--rule", type=float, default=4.0, help="betting-rule |edge| threshold")
-    p.add_argument("--asof", action="store_true",
-                   help="use no-leakage as-of ratings (Phase 2) instead of leaky season totals")
-    p.add_argument("--k", type=float, default=4.0, help="cold-start blend, pseudo-games (--asof)")
-    p.add_argument("--shrink", type=float, default=0.7, help="prior-season regression (--asof)")
-    p.add_argument("--save_csv", action="store_true", help="save per-game grading to CSV")
-    args = p.parse_args()
-
-    games = load_games()
-    if args.asof:
-        ratings = blended_asof_ratings(games, args.seasons, cap=args.cap,
-                                       k=args.k, shrink=args.shrink)
-        rating_fn = lambda season, week: ratings[(season, week)]  # noqa: E731
-        mode = f"AS-OF ratings, no leakage (k={args.k:g}, shrink={args.shrink:g})"
-    else:
-        ratings = season_total_ratings(games, args.seasons, cap=args.cap)
-        rating_fn = lambda season, week: ratings[season]  # noqa: E731 -- the leaky stub
-        mode = "ROUGH: season-total ratings, LEAKY"
-
-    df = collect_predictions(games, args.seasons, rating_fn)
-    if df.empty:
-        sys.exit("no completed games found for those seasons")
-    hfa = estimate_hfa(df.assign(neutral=df["neutral"]))
-    df, ats, std = grade(df, hfa, args.rule)
-    report(df, ats, args.seasons, f"HFA estimated from data: {hfa:+.2f} pts",
-           f"margin-error std: {std:.2f} pts", args.rule, mode)
-
-    if args.save_csv:
-        out = pd.concat([df, ats[["bet_home", "ats_result", "bet_won"]]], axis=1)
-        out.to_csv("backtest_srs_games.csv", index=False)
-        print("\nSaved: backtest_srs_games.csv")
-
-
-if __name__ == "__main__":
-    main()

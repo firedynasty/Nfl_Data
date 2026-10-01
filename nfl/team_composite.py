@@ -38,6 +38,10 @@ import sys
 
 import pandas as pd
 
+import os as _os
+import sys as _sys
+_sys.path.insert(0, _os.path.join(_os.path.dirname(__file__), "..", "shared"))
+
 from nfl_box_score_analysis import (
     build_long_results,
     first_downs_by_team_game,

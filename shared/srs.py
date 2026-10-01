@@ -22,11 +22,39 @@ USAGE
 """
 
 import argparse
+import os
 import sys
 
 import pandas as pd
 
-from nfl_box_score_analysis import load_games, build_long_results
+
+def build_long_results(games, seasons):
+    """Reshape a games table (one row per game, nflverse games.csv shape)
+    into one row per team per game, with a W/L/T result column. Lives here
+    (not in the NFL toolkit) because it's sport-agnostic: the college
+    pipeline feeds the same shape from ESPN. nfl/nfl_box_score_analysis.py
+    re-exports it so older imports keep working."""
+    g = games.dropna(subset=["home_score", "away_score"]).copy()
+    g["season"] = g["season"].astype(int)
+    g = g[g["season"].isin(seasons)]
+
+    cols = ["game_id", "season", "week", "home_team", "away_team", "home_score", "away_score"]
+    home = g[cols].copy()
+    home["team"], home["opp"] = home["home_team"], home["away_team"]
+    home["team_score"], home["opp_score"] = home["home_score"], home["away_score"]
+
+    away = g[cols].copy()
+    away["team"], away["opp"] = away["away_team"], away["home_team"]
+    away["team_score"], away["opp_score"] = away["away_score"], away["home_score"]
+
+    long = pd.concat([home, away], ignore_index=True)[
+        ["game_id", "season", "week", "team", "opp", "team_score", "opp_score"]
+    ]
+    long["result"] = long.apply(
+        lambda r: "W" if r.team_score > r.opp_score else ("L" if r.team_score < r.opp_score else "T"),
+        axis=1,
+    )
+    return long
 
 
 def game_margins(long, season, cap=None):
@@ -174,6 +202,9 @@ def main():
                    help="year-over-year regression of prior-season SRS (with --asof)")
     args = p.parse_args()
 
+    # NFL-only CLI: the games source lives in the nfl/ toolkit.
+    sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "nfl"))
+    from nfl_box_score_analysis import load_games
     games = load_games()
 
     if args.asof is not None:

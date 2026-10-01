@@ -32,6 +32,10 @@ import sys
 import numpy as np
 import pandas as pd
 
+import os as _os
+import sys as _sys
+_sys.path.insert(0, _os.path.join(_os.path.dirname(__file__), "..", "shared"))
+
 from nfl_box_score_analysis import load_games, load_pbp, build_long_results
 from team_composite import qb_epa_by_team_game, pressure_allowed_by_team_game
 from srs import blended_asof_ratings
